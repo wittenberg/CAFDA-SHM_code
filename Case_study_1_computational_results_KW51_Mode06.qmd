@@ -1,0 +1,552 @@
+---
+title: "Covariate-Adjusted Functional Data Analysis for Structural Health Monitoring"
+subtitle: "KW51: Mode 06 computing results"
+
+# Freeze computed outputs
+freeze: true
+
+# Enable banner style title blocks
+title-block-banner: true
+
+# Enable CC licence appendix
+license: "CC BY"
+
+# Default for table of contents
+toc: true
+toc-title: Table of contents
+toc-location: left
+
+# Default knitr options
+execute:
+  echo: true
+  message: true
+  warning: true
+cache: false
+
+date: "10/07/2024" 
+format:
+  html:
+    embed-resources: false
+    code-fold: false
+    code-summary: "Code"
+    code-tools:
+      source: true
+      toggle: true
+      caption: none
+
+knitr:
+  opts_chunk:
+    dev:
+      - png
+      - pdf
+      
+editor: source
+
+author:
+  - name: Philipp Wittenberg
+    corresponding: true
+    id: pw
+    orcid: 0000-0001-7151-8243
+    email: pwitten@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Lizzie Neumann
+    id: ln
+    orcid: 0000-0003-2256-1127
+    email: neumannl@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Alexander Mendler
+    id: ln
+    orcid: 0000-0002-7492-6194
+    email: alexander.mendler@tum.de
+    affiliation: 
+      - name: Technical University of Munich
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Jan Gertheiss
+    id: jg
+    orcid: 0000-0001-6777-4746
+    email: gertheij@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de        
+        
+        
+
+citation: 
+  container-title: arXiv:2408.02106
+  doi: 10.48550/arXiv.2408.02106
+  
+bibliography:
+  - literature.bib
+link-citations: true
+
+output: github_document
+---
+
+```{r}
+start_time <- Sys.time()
+```
+
+Load libraries
+
+```{r, message=FALSE}
+# Package names
+packages <- c("benchmarkme", "dplyr", "gamm4", "gratia", "mgcv", "refund", 
+              "tidyr", "xtable")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+```
+
+```{r load_data}
+dta  <- readRDS("data/Dataset_bridge_KW51.RDS")
+var  <- c("temp", "mode", "ind_day", "ind_hour", "td01", "humid")
+nc   <- 8
+dta0 <- filter(dta, intervention==0) |> rename(temp=tBD31A, humid=rhBD31A)
+dta1 <- filter(dta, intervention!=2) |> rename(temp=tBD31A, humid=rhBD31A)
+dta2 <- dta |> rename(temp=tBD31A, humid=rhBD31A)
+M <- (sprintf("Mode_%02d", 1:14))
+i <- 06
+
+dtai <- dta0 |> 
+  dplyr::select(td01, temp, humid, all_of(M), ind_day, ind_hour, date) |> 
+  rename(mode=M[i]) |>
+  dplyr::select(temp, humid, mode, ind_day, ind_hour, date) |>
+  group_by(ind_day) |>
+  filter(ind_day<=200) |>
+  mutate(td01 = seq(.5, 23.5, 1)) |>
+  ungroup()
+nd <- dtai$ind_day |> n_distinct()
+```
+
+```{r remove_outliers_natural_frequencies}
+LIMITS <- dtai |>
+  filter(ind_day<=200) |>
+  dplyr::select(mode) |> 
+  summarise(mmean = mean(mode, na.rm=TRUE),
+            msd   = sd(mode, na.rm=TRUE),
+            upperLimit=mmean+3*msd,
+            lowerLimit=mmean-3*msd) 
+dtai <- dtai |> 
+  mutate(mode=replace(mode, mode>LIMITS$upperLimit & ind_day%in%c(1:200), NA)) |>
+  mutate(mode=replace(mode, mode<LIMITS$lowerLimit & ind_day%in%c(1:200), NA))
+
+head(dtai)
+tail(dtai)
+```
+
+## Temperature effect plus recurring daily pattern
+
+### Step: 1 Initial model
+
+```{r gam2_fit_initial_model}
+gam2 <- gam(mode ~ s(td01, bs="cc") + s(temp, bs="cr"), data=dtai, 
+            method="GCV.Cp", control=list(nthreads=nc))
+summary(gam2)
+```
+
+### Structural component $w$ (FPCA)
+
+#### Assign residuals
+
+```{r gam2_assign_residuals}
+dtaiA2 <- left_join(dtai, 
+                    drop_na(dtai, mode, temp) |> mutate(gam2res=gam2$residuals), 
+                    by=var)
+```
+
+### Step: 2 FPCA
+
+#### FPCA
+
+```{r gam2_FPCA}
+# find days without any data (only NA's)
+NAgeq24 <- dtaiA2 |>
+  dplyr::select(gam2res, ind_day, ind_hour) |>
+  group_by(ind_day)|>
+  summarise(across(-c(ind_hour), ~sum(is.na(.))>=21)) |>
+  filter(gam2res==TRUE) |>
+  dplyr::select(-gam2res)
+  
+fpcaRes <- fpca.face(
+  Y=dtaiA2 |>
+    dplyr::select(gam2res, ind_day, ind_hour) |>
+    filter(!ind_day %in% NAgeq24$ind_day) |>
+    pivot_wider(names_from=ind_day, values_from=gam2res) |>
+    dplyr::select(-ind_hour) |>
+    as.matrix() |>
+    t(),
+  knots=20,
+pve=.99)
+saveRDS(fpcaRes, "data/mode06_gam2_fpcaRes.RDS")
+```
+
+#### Prepare for refit with functional random effects
+
+```{r gam2_include_pricipal_components}
+dtaiB2 <- left_join(
+  dtai, dtaiA2 |> mutate(
+    fpcaRes$efunctions |>
+    data.frame() |>
+    slice(rep(row_number(), nd)) |>
+    'colnames<-' (sprintf("ef%02d", 1:fpcaRes$npc)))
+  , by=var) |>
+   mutate(ind_dayf=factor(ind_day))
+```
+
+### Step: 3 Refitted model
+
+#### Refit with functional random effects (lme4 and mgcv)
+
+#### lme and mgcv model estimation
+
+```{r gam2d_refit_model}
+eq <- paste0("mode~", "s(", "td01", ", bs = 'cc')", "+", "s(", "temp", ", bs = 'cr')")
+re <- paste0("~", paste((sprintf("ef%02d", 1:fpcaRes$npc)), collapse="+"), "-1")
+gam2d <- gamm(as.formula(eq), data=dtaiB2, random=list(ind_dayf=pdDiag(as.formula(re))), 
+              control=list(msMaxIter=100, msMaxEval=1000))
+```
+
+#### Compute R2 for fixed effect model
+
+```{r gam2d_R2}
+dtaiC2 <- right_join(dtaiB2, drop_na(dtai, mode, temp) |> 
+                      mutate(fitted_values=gam2d$gam$fitted.values), by=var)
+
+dtaiD2 <- dtaiC2 |>
+  dplyr::select(date.x, ind_day, ind_hour, fitted_values, mode) |>
+  mutate(nominator=(mode-fitted_values)^2, denominator=(mode-mean(mode))^2)
+
+R2gam2d <- 1-(sum(dtaiD2$nominator)/sum(dtaiD2$denominator))
+```
+
+### Save data
+
+```{r save_data_objects_gam2d}
+saveRDS(gam2d, file="data/mode06_gam2d.RDS")
+saveRDS(dtaiB2, file="data/mode06_dtaiB2.RDS")
+```
+
+
+## Varying daily pattern
+
+### Step: 1 Initial model
+
+```{r gam4_fit_initial_model}
+gam4 <- gam(mode ~ te(td01, ind_day, bs="cc"), data=dtai, method="GCV.Cp", 
+            control=list(nthreads=nc))
+summary(gam4)
+```
+
+### Structural component $w$ (FPCA)
+
+#### Assign residuals
+
+```{r gam4_assign_residuals}
+dtaiA4 <- left_join(dtai, 
+                    drop_na(dtai, mode) |> mutate(gam4res=gam4$residuals), 
+                    by=var)
+```
+
+### Step: 2 FPCA
+
+#### FPCA
+
+```{r gam4_FPCA}
+NAgeq24 <- dtaiA4 |>
+    dplyr::select(gam4res, ind_day, ind_hour) |>
+    group_by(ind_day)|>
+    summarise(across(-c(ind_hour), ~sum(is.na(.))>=21)) |>
+    filter(gam4res==TRUE) |>
+    dplyr::select(-gam4res)
+  
+fpcaRes <- fpca.face(
+  Y=dtaiA4 |>
+      dplyr::select(gam4res, ind_day, ind_hour) |>
+      filter(!ind_day %in% NAgeq24$ind_day) |>
+      pivot_wider(names_from=ind_day, values_from=gam4res) |>
+      dplyr::select(-ind_hour) |>
+      as.matrix() |>
+      t(),
+    knots=20,
+  pve=.99)
+```
+
+#### Prepare for refit with functional random effects
+
+```{r gam4_include_pricipal_components}
+dtaiB4 <- left_join(
+  dtai, dtaiA4 |> mutate(
+    fpcaRes$efunctions |>
+    data.frame() |>
+    slice(rep(row_number(), nd)) |>
+    'colnames<-' (sprintf("ef%02d", 1:fpcaRes$npc)))
+  , by=var) |>
+   mutate(ind_dayf=factor(ind_day))
+```
+
+### Step: 3 Refitted model
+
+#### Refit with functional random effects (lme4 and mgcv)
+
+```{r gam4d_refit_model}
+eq <- paste0("mode~te(", "td01, ind_day", ",bs = 'cc')")
+re <- paste0("~", paste((sprintf("ef%02d", 1:fpcaRes$npc)), collapse="+"), "-1")
+gam4d <- gamm(as.formula(eq), data=dtaiB4, random=list(ind_dayf=pdDiag(as.formula(re))),
+              control=list(msMaxIter=1000, msMaxEval=1000))
+```
+
+#### Compute R2 for fixed effect model
+
+```{r gam4d_R2}
+dtaiC4 <- right_join(dtaiB4, drop_na(dtai, mode) |> 
+                      mutate(fitted_values=gam4d$gam$fitted.values), by=var)
+
+dtaiD4 <- dtaiC4 |>
+  dplyr::select(date.x, ind_day, ind_hour, fitted_values, mode) |>
+  mutate(nominator=(mode-fitted_values)^2, denominator=(mode-mean(mode))^2)
+
+R2gam4d <- 1-(sum(dtaiD4$nominator)/sum(dtaiD4$denominator))
+```
+
+### Save data
+
+```{r save_data_objects_gam4}
+saveRDS(gam4d, file="data/mode06_gam4d.RDS")
+saveRDS(dtaiB4, file="data/mode06_dtaiB4.RDS")
+```
+
+## Temperature and relative humidity effect plus varying daily pattern
+
+### Step: 1 Initial model
+
+```{r gam6_fit_initial_model}
+gam6 <- gam(mode ~  te(td01, ind_day, bs="cc") + s(temp, bs="cr") + 
+              s(humid, bs="cr"), data=dtai, method="GCV.Cp", 
+            control=list(nthreads=nc))
+summary(gam6)
+```
+
+### Structural component $w$ (FPCA)
+
+#### Assign residuals
+
+```{r gam6_assign_residuals}
+dtaiA6 <- left_join(dtai, 
+                    drop_na(dtai, mode, temp, humid) |> 
+                      mutate(gam6res=gam6$residuals), 
+                    by=var)
+```
+
+### Step: 2 FPCA
+
+```{r gam6_FPCA}
+# find days without any data (only NA's)
+NAgeq24 <- dtaiA6 |>
+  dplyr::select(gam6res, ind_day, ind_hour) |>
+  group_by(ind_day)|>
+  summarise(across(-c(ind_hour), ~sum(is.na(.))>=21)) |>
+  filter(gam6res==TRUE) |>
+  dplyr::select(-gam6res)
+  
+fpcaRes <- fpca.face(
+  Y=dtaiA6 |>
+    dplyr::select(gam6res, ind_day, ind_hour) |>
+    filter(!ind_day %in% NAgeq24$ind_day) |>
+    pivot_wider(names_from=ind_day, values_from=gam6res) |>
+    dplyr::select(-ind_hour) |>
+    as.matrix() |>
+    t(),
+    knots=20,
+  pve=.99)
+```
+
+#### FPCA
+
+#### Prepare for refit with functional random effects
+
+```{r gam6_include_pricipal_components}
+dtaiB6 <- left_join(
+  dtai, dtaiA6 |> mutate(
+    fpcaRes$efunctions |>
+    data.frame() |>
+    slice(rep(row_number(), nd)) |>
+    'colnames<-' (sprintf("ef%02d", 1:fpcaRes$npc)))
+  , by=var) |>
+   mutate(ind_dayf=factor(ind_day))
+```
+
+### Step: 3 Refitted model
+
+#### Refit with functional random effects (lme4 and mgcv)
+
+```{r gam6d_refit_model}
+eq <- paste0("mode~", 
+             "te(", "td01, ind_day", ",bs = 'cc')", "+", 
+             "s(", "temp", ", bs = 'cr')", "+", 
+             "s(", "humid", ", bs = 'cr')")
+re <- paste0("~", paste((sprintf("ef%02d", 1:fpcaRes$npc)), collapse="+"), "-1")
+gam6d <- gamm(as.formula(eq), data=dtaiB6, random=list(ind_dayf=pdDiag(as.formula(re))), 
+              control=list(msMaxIter=100, msMaxEval=1000), method="ML")
+```
+
+#### Compute R2 for fixed effect model
+
+```{r gam6d_R2}
+dtaiC6 <- right_join(dtaiB6, drop_na(dtai, mode, temp, humid) |> 
+                      mutate(fitted_values=gam6d$gam$fitted.values), by=var)
+
+dtaiD6 <- dtaiC6 |>
+  dplyr::select(date.x, ind_day, ind_hour, fitted_values, mode) |>
+  mutate(nominator=(mode-fitted_values)^2, denominator=(mode-mean(mode))^2)
+
+R2gam6d <- 1-(sum(dtaiD6$nominator)/sum(dtaiD6$denominator))
+```
+
+### Save data
+
+```{r save_data_objects_gam6}
+saveRDS(gam6d, file="data/mode06_gam6d.RDS")
+saveRDS(dtaiB6, file="data/mode06_dtaiB6.RDS")
+```
+
+## Temperature and relative humidity effect (interaction) plus varying daily pattern
+
+### Step: 1 Initial model
+
+```{r gam7_fit_initial_model}
+gam7 <- gam(mode ~  te(td01, ind_day, bs="cc") + te(temp, humid, bs="cr"), 
+            data=dtai, method="GCV.Cp", control=list(nthreads=nc))
+summary(gam7)
+```
+
+### Structural component $w$ (FPCA)
+
+#### Assign residuals
+
+```{r gam7_assign_residuals}
+dtaiA7 <- left_join(dtai, 
+                    drop_na(dtai, mode, temp, humid) |> 
+                      mutate(gam7res=gam7$residuals), 
+                    by=var)
+```
+
+### Step: 2 FPCA
+
+#### FPCA
+
+```{r gam7_FPCA, eval=TRUE}
+# find days without any data (only NA's)
+NAgeq24 <- dtaiA7 |>
+  dplyr::select(gam7res, ind_day, ind_hour) |>
+  group_by(ind_day)|>
+  summarise(across(-c(ind_hour), ~sum(is.na(.))>=21)) |>
+  filter(gam7res==TRUE) |>
+  dplyr::select(-gam7res)
+  
+fpcaRes <- fpca.face(
+  Y=dtaiA7 |>
+    dplyr::select(gam7res, ind_day, ind_hour) |>
+    filter(!ind_day %in% NAgeq24$ind_day) |>
+    pivot_wider(names_from=ind_day, values_from=gam7res) |>
+    dplyr::select(-ind_hour) |>
+    as.matrix() |>
+    t(),
+    knots=20,
+  pve=.99)
+```
+
+#### Prepare for refit with functional random effects
+
+```{r gam7_include_pricipal_components}
+dtaiB7 <- left_join(
+  dtai, dtaiA7 |> mutate(
+    fpcaRes$efunctions |>
+    data.frame() |>
+    slice(rep(row_number(), nd)) |>
+    'colnames<-' (sprintf("ef%02d", 1:fpcaRes$npc)))
+  , by=var) |>
+   mutate(ind_dayf=factor(ind_day))
+```
+
+### Step: 3 Refitted model
+
+#### Refit with functional random effects (lme4 and mgcv)
+
+```{r gam7d_refit_model}
+eq <- paste0("mode~", 
+             "te(", "td01, ind_day", ",bs = 'cc')", "+", 
+             "te(", "temp, humid", ", bs = 'cr')")
+re <- paste0("~", paste((sprintf("ef%02d", 1:fpcaRes$npc)), collapse="+"), "-1")
+gam7d <- gamm(as.formula(eq), data=dtaiB7, random=list(ind_dayf=pdDiag(as.formula(re))), 
+              method="ML")
+```
+
+```{r gam7d_R2}
+dtaiC7 <- right_join(dtaiB7, drop_na(dtai, mode, temp, humid) |> 
+                      mutate(fitted_values=gam7d$gam$fitted.values), by=var)
+
+dtaiD7 <- dtaiC7 |>
+  dplyr::select(date.x, ind_day, ind_hour, fitted_values, mode) |>
+  mutate(nominator=(mode-fitted_values)^2, denominator=(mode-mean(mode))^2)
+
+R2gam7d <- 1-(sum(dtaiD7$nominator)/sum(dtaiD7$denominator))
+```
+
+### Save data
+
+```{r save_data_objects_gam7}
+saveRDS(fpcaRes, "data/mode06_gam7_fpcaRes.RDS")
+saveRDS(gam7d, file="data/mode06_gam7d.RDS")
+saveRDS(dtaiB7, file="data/mode06_dtaiB7.RDS")
+```
+
+```{r}
+xtable::xtable(
+rbind(
+  cbind(R2gam2d, R2gam4d, R2gam6d, R2gam7d),
+  cbind(select(dtaiD2, ind_day) |> unique() |> nrow(), 
+        select(dtaiD4, ind_day) |> unique() |> nrow(),
+        select(dtaiD6, ind_day) |> unique() |> nrow(),
+        select(dtaiD7, ind_day) |> unique() |> nrow()),
+  cbind(nrow(dtaiD2), nrow(dtaiD4), nrow(dtaiD6), nrow(dtaiD7))
+)
+)
+```
+
+## Computational and session information
+
+Hardware information:
+
+```{r extract_hardware_specification}
+get_cpu()
+get_ram()
+```
+
+Computation time:
+
+```{r computational_time}
+print(paste("Computation time:", round(Sys.time() - start_time, 2)[[1]], "seconds"))
+```
+Session information:
+
+```{r session_info}
+sessionInfo()
+```

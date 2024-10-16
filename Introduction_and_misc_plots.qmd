@@ -1,0 +1,418 @@
+---
+title: "Covariate-Adjusted Functional Data Analysis for Structural Health Monitoring"
+subtitle: "Introduction plots and functional DGP profile plots"
+        
+# Freeze computed outputs
+freeze: true
+
+# Enable banner style title blocks
+title-block-banner: true
+
+# Enable CC licence appendix
+license: "CC BY"
+
+# Default for table of contents
+toc: true
+toc-title: Table of contents
+toc-location: left
+
+# Default knitr options
+execute:
+  echo: true
+  message: true
+  warning: true
+cache: false
+
+date: "10/07/2024" 
+format:
+  html:
+    embed-resources: false
+    code-fold: false
+    code-summary: "Code"
+    code-tools:
+      source: true
+      toggle: true
+      caption: none
+
+knitr:
+  opts_chunk:
+    dev:
+      - png
+      - pdf
+      
+editor: source
+
+author:
+  - name: Philipp Wittenberg
+    corresponding: true
+    id: pw
+    orcid: 0000-0001-7151-8243
+    email: pwitten@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Lizzie Neumann
+    id: ln
+    orcid: 0000-0003-2256-1127
+    email: neumannl@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Alexander Mendler
+    id: ln
+    orcid: 0000-0002-7492-6194
+    email: alexander.mendler@tum.de
+    affiliation: 
+      - name: Technical University of Munich
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Jan Gertheiss
+    id: jg
+    orcid: 0000-0001-6777-4746
+    email: gertheij@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de        
+        
+        
+
+citation: 
+  container-title: arXiv:2408.02106
+  doi: 10.48550/arXiv.2408.02106
+  
+bibliography:
+  - literature.bib
+link-citations: true
+
+output: github_document
+---
+
+```{r}
+start_time <- Sys.time()
+```
+
+Load libraries
+
+```{r load_libraries_and_data, message=FALSE}
+# Package names
+packages <- c("benchmarkme", "dplyr", "funData", "ggplot2", "patchwork", "purrr", 
+                 "segmented", "tidyr") # "png" only to include png files
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+
+librarian::shelf(benchmarkme, dplyr, funData, ggplot2, patchwork, png, purrr, 
+                 segmented, tidyr, quiet = TRUE)
+
+theme_set(theme_bw() +
+            theme(panel.grid.major=element_blank(), 
+                  panel.grid.minor=element_blank(),              
+                  plot.title=element_text(size=28, hjust=.5),
+                  plot.margin=margin(5,20,5,5, "pt"),
+                  legend.title=element_blank(),
+                  legend.text=element_text(size=14),
+                  strip.background=element_rect(fill="white"),
+                  strip.text=element_text(size=10, face="bold"),
+                  strip.text.x=element_text(size=16),
+                  axis.text=element_text(size=14),
+                  axis.title=element_text(size=14), 
+                  axis.text.x=element_text(color="black"),
+                  axis.text.y=element_text(color="black"),
+                  axis.ticks=element_line(color="black")
+            )
+          )
+```
+
+## Introduction plot of functional profiles
+
+### Load data
+
+```{r load_data}
+dta  <- readRDS("data/Dataset_bridge_KW51.RDS")
+dta0 <- filter(dta, intervention==0) |> rename(temp=tBD31A, humid=rhBD31A)
+M    <- (sprintf("Mode_%02d", 1:14))
+
+dtai <- dta0 |> 
+  dplyr::select(td01, temp, humid, all_of(M), ind_day, ind_hour, date) |> 
+  rename(mode=M[6]) |>
+  dplyr::select(temp, humid, mode, ind_day, ind_hour, td01, date) |>
+  filter(ind_day<=200)
+```
+
+### Piecewise linear fit
+
+```{r piecewise_fit}
+DAY   <- seq(.5, 23.5, 1)/24  ## Day profile sequence for estimation and plotting
+hseq  <- DAY*24               ## sequence of hours per day
+
+df <- dtai |>
+  dplyr::select(date, temp, mode) |>
+  mutate(td01=rep(hseq, 200))
+
+df0 <- df |>
+  drop_na() |>
+  group_by(temp)
+
+lm_fit_pw <- segmented::segmented(lm(mode~temp, data=df0))
+
+predicted_df_pw <- data.frame(reg_pred=fitted.values(lm_fit_pw), temp=df0$temp)
+```
+
+### Plot Natural frequency
+
+```{r prepare_plot_labels}
+xlabels <- c(0, rep("",5), 6, rep("",5), 12, rep("",5), 18, rep("",4), 23)
+exemp_days <- c(4, 22, 75, 84, 92, 97, 99, 104, 114, 121, 126, 139, 143)
+cc <- scales::seq_gradient_pal("blue", "red", "Lab")(seq(0,1,length.out=length(exemp_days)))
+xlabs <- seq(0,24,6)
+```
+
+```{r prepare_plot_labels2}
+LABELS <- df0 |>
+  ungroup() |>
+  dplyr::select(date, temp) |>
+  pivot_longer(cols=!date, names_to="channels") |>
+  filter(channels%in%c("date", "temp")) |>
+  mutate(channels=factor(channels, labels="Temperature")) |>
+  mutate(tempdate=format(date, "%Y-%m-%d"), temphour=format(date, "%H")) |>
+  group_by(tempdate) |>
+  mutate(ind_day=factor(cur_group_id())) |>
+  filter(ind_day%in%exemp_days) |>
+  ungroup() |>
+  dplyr::select(date, temphour, ind_day) |>
+  filter(temphour=="12") |>
+  dplyr::select(-temphour) |>
+  transmute(m=format(date, "%Y-%m-%d")) |>
+  as.vector()
+```
+
+```{r plot_natural_frequency}
+p1 <- df0 |>
+  ungroup() |>
+  dplyr::select(date, mode, td01) |>
+  pivot_longer(cols=!c(date, td01), names_to="channels") |>
+  filter(channels%in%c("date", "mode")) |>
+  mutate(channels=factor(channels, labels="Observed response"),
+         tempdate=format(date, "%Y-%m-%d"), temphour=format(date, "%H")) |>
+  group_by(tempdate) |>
+  mutate(ind_day=factor(cur_group_id())) |>
+  filter(ind_day%in%exemp_days) |>
+  mutate(ind_day=factor(ind_day, labels=LABELS$m, levels=exemp_days)) |>
+  ggplot(aes(x=td01, y=value, group=ind_day, colour=ind_day)) +
+    geom_point(size=1) +
+    geom_line() +
+    scale_x_continuous(breaks=xlabs) +
+    scale_colour_manual(values=cc) +  
+    facet_wrap(~channels, scales="free_y") +
+    labs(x="Time of day [h]", y="Natural frequency [Hz]") +
+    guides(colour=guide_legend(override.aes=list(size=2))) +
+   theme(legend.position = "none")
+```
+
+### Plot Covariate temperature
+
+```{r plot_covariate_temperature}
+p2 <- df0 |>
+  ungroup() |>
+  dplyr::select(date, temp, td01) |>
+  pivot_longer(cols=!c(date, td01), names_to="channels") |>
+  filter(channels%in%c("date", "temp")) |>
+  mutate(channels=factor(channels, labels="Temperature"),
+         tempdate=format(date, "%Y-%m-%d"), temphour=format(date, "%H")) |>
+  group_by(tempdate) |>
+  mutate(ind_day=factor(cur_group_id())) |>
+  filter(ind_day%in%exemp_days) |>
+  mutate(ind_day=factor(ind_day, labels=LABELS$m, levels=exemp_days)) |>
+  ggplot(aes(x=td01, y=value, group=ind_day, colour=ind_day)) +
+    geom_point(size=1) +
+    geom_line() +
+    scale_x_continuous(name="Time of day [h]", breaks=xlabs) +
+    scale_colour_manual(values=cc) +  
+    facet_wrap(~channels, scales="free_y") +
+    labs(y="Temperature [°C]") +
+    guides(colour=guide_legend(override.aes=list(size=2)))
+```
+
+### Plot Error process
+
+```{r plot_error_process}
+p3 <- full_join(df0, predicted_df_pw, by="temp") |> 
+  mutate(error_process=mode-reg_pred) |>
+  filter(date > as.POSIXct("23-11-2018", tz="UTC", format="%d-%m-%Y") &
+         date < as.POSIXct("22-04-2019", tz="UTC", format="%d-%m-%Y")) |>
+  pivot_longer(cols=!c(date, td01), names_to="channels") |>
+  filter(channels%in%c("date", "error_process")) |>
+  mutate(channels=factor(channels, labels="Est. error process"),
+         tempdate=format(date, "%Y-%m-%d"), temphour=format(date, "%H")) |>
+  group_by(tempdate) |>
+  mutate(ind_day=factor(cur_group_id())) |>
+  filter(ind_day%in%exemp_days) |> 
+  mutate(ind_day=factor(ind_day, labels=LABELS$m, levels=exemp_days)) |>
+  ggplot(aes(x=td01, y=value, group=ind_day, colour=ind_day)) +
+    geom_hline(yintercept=0, color="black") +
+    geom_point(size=1) +
+    geom_line() +
+    scale_x_continuous(name="Time of day [h]", breaks=xlabs) +
+    scale_colour_manual(values=cc, name="Days", labels=c(LABELS)) +  
+    facet_wrap(~channels, scales="free_y") +
+    labs(x="Time of day [h]", y="") +
+    guides(colour=guide_legend(override.aes=list(size=2)))
+```
+
+### Combine plots
+
+```{r Figure_1_combined_plots_introduction, fig.height=6, fig.width=11}
+bridge <- NULL #png::readPNG("KW51.png", native = TRUE)
+design <- "AB
+           CD
+"
+
+wrap_elements(bridge) +
+  p1 + 
+  p2 + p3 + plot_layout(design = design, guides = 'collect') 
+```
+
+## Data generation plots of artificial profiles
+
+```{r simulation_setup}
+fb1   <- function(z) exp(-z/2.2)-.5 ## Transformation function f(z)
+meanU <- 5          ## Mean Temperature level
+Tmin  <- 0          ## Minimum Temperature
+Tmax  <- 12         ## Maximum Temperature
+DAY   <- seq(.5, 23.5, 1)/24  ## Day profile sequence for estimation and plotting
+N     <- 200        ## Number of profiles
+hseq  <- DAY*24     ## sequence of hours per day
+argvals <- 2*pi*DAY
+```
+
+```{r generate_profiles_for_a_single_run}
+set.seed(123456)
+plain <- funData::simFunData(hseq, M=3, eFunType="Poly", 
+                             eValType="exponential", N=N)
+noisy <- funData::addError(plain$simData, sd=.2)
+
+# 3. simulate_covariate_mean_profile
+covmeanprof <- sin(argvals)
+  
+# 4. simulate global intercept
+iglobal <- outer(-.05, sin(argvals*1/2)+cos(argvals*2))
+aldf <- data.frame(iglobal-mean(iglobal))
+
+## 5. Simulate complete data set
+
+## 5.1 Global intercept (same profile for N days)
+al <- purrr::map_dfr(seq_len(N),~aldf) |>
+  t() |>
+  data.frame() |>
+  'colnames<-' (c(sprintf("%03d", 1:N))) |>
+  mutate(ind_hour=row_number()) |>
+  pivot_longer(cols=!ind_hour, names_to="ind_day", values_to="alpha") |>
+  arrange(ind_day)
+
+## 5.2 Covariate data
+z <- sapply(1:200, function(i) -1*runif(1, 0, 4)*covmeanprof+runif(1, 2, 10)) |>
+  data.frame()
+
+## 5.3 Structural component 
+w <- sapply(1:24, function(j) noisy@X[, j]) |> 
+  t() |>
+  data.frame() |>
+  'colnames<-' (c(sprintf("%03d", 1:N))) |>
+  mutate(ind_hour=row_number()) |>
+  pivot_longer(cols=!ind_hour, names_to="ind_day", values_to="w") |>
+  arrange(ind_day)
+
+## 5.4 Compile complete data set  
+simdf <- z |>
+  'colnames<-' (c(sprintf("%03d", 1:N))) |>
+  mutate(ind_hour=row_number()) |>
+  pivot_longer(cols=!ind_hour, names_to="ind_day", values_to="z") |>
+  arrange(ind_day) |>
+  mutate(fz=fb1(z), meanU=meanU, intercept=al$alpha) |>
+  full_join(w, by=c("ind_hour", "ind_day")) |>
+  group_by(ind_day) |>
+  mutate(u=intercept+fz+w+meanU, td01=hseq) |>
+  ungroup()
+```
+
+```{r plots_from_artificial_data_generation}
+s <- sprintf("%003d", 1:200)
+t <- sample(s, size=20)
+xlabs <- seq(0,24,6)
+
+p1 <- simdf |> 
+  filter(ind_day%in%t) |>
+  mutate(channel=factor(1, labels="Response data")) |>
+  ggplot(aes(x=td01, y=u, group=ind_day, colour=ind_day)) +
+    geom_point(size=1) +
+    geom_line() +
+    facet_wrap(~channel) +
+    labs(y=bquote(u[j])) +
+    scale_color_discrete(name="Days") +
+    scale_x_continuous(name="Time of day [h]", breaks=xlabs) +
+    theme(legend.position="none")
+
+p2 <- simdf |>
+  filter(ind_day%in%t) |>
+  mutate(channel=factor(1, labels="Covariate data")) |>
+  ggplot(aes(x=td01, y=z, group=ind_day, colour=ind_day)) +
+    geom_point(size=1) +
+    geom_line() +
+    facet_wrap(~channel) +
+    labs(y=bquote(z[j])) +
+    scale_color_discrete(name="Days") +
+    scale_x_continuous(name="Time of day [h]", breaks=xlabs) +
+    theme(legend.position="none")
+
+
+p3 <- simdf |>
+  mutate(error=u-fz-intercept-meanU) |>
+  filter(ind_day%in%t) |>
+  mutate(channel=factor(1, labels="Error process")) |>
+  ggplot(aes(x=td01, y=error, group=ind_day, colour=ind_day)) +
+  geom_hline(yintercept=0) +
+    geom_point(size=1) +
+    geom_line() +
+    facet_wrap(~channel) +
+    labs(y=bquote(E[j])) +
+    scale_color_discrete(name="Days") +
+    scale_x_continuous(name="Time of day [h]", breaks=xlabs) +
+    theme(legend.position="none") 
+```
+
+```{r Figure_3_combine_data_generated_plots_Simulation_study_data, fig.height=4, fig.width=11}
+p1 + p2 + p3 +  plot_layout(guides = 'collect', nrow=1)
+```
+
+## Computational and session information
+
+Hardware information:
+
+```{r extract_hardware_specification}
+get_cpu()
+get_ram()
+```
+
+Computation time:
+
+```{r computational_time}
+print(paste("Computation time:", round(Sys.time() - start_time, 2)[[1]], "seconds"))
+```
+Session information:
+
+```{r session_info}
+sessionInfo()
+```

@@ -1,0 +1,215 @@
+---
+title: "Covariate-Adjusted Functional Data Analysis for Structural Health Monitoring"
+subtitle: "Simulations results monitoring scheme"
+        
+# Freeze computed outputs
+freeze: true
+
+# Enable banner style title blocks
+title-block-banner: true
+
+# Enable CC licence appendix
+license: "CC BY"
+
+# Default for table of contents
+toc: true
+toc-title: Table of contents
+toc-location: left
+
+# Default knitr options
+execute:
+  echo: true
+  message: true
+  warning: true
+cache: false
+
+date: "10/07/2024" 
+format:
+  html:
+    embed-resources: false
+    code-fold: false
+    code-summary: "Code"
+    code-tools:
+      source: true
+      toggle: true
+      caption: none
+
+knitr:
+  opts_chunk:
+    dev:
+      - png
+      - pdf
+      
+editor: source
+
+author:
+  - name: Philipp Wittenberg
+    corresponding: true
+    id: pw
+    orcid: 0000-0001-7151-8243
+    email: pwitten@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Lizzie Neumann
+    id: ln
+    orcid: 0000-0003-2256-1127
+    email: neumannl@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Alexander Mendler
+    id: ln
+    orcid: 0000-0002-7492-6194
+    email: alexander.mendler@tum.de
+    affiliation: 
+      - name: Technical University of Munich
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Jan Gertheiss
+    id: jg
+    orcid: 0000-0001-6777-4746
+    email: gertheij@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de        
+        
+        
+
+citation: 
+  container-title: arXiv:2408.02106
+  doi: 10.48550/arXiv.2408.02106
+  
+bibliography:
+  - literature.bib
+link-citations: true
+
+output: github_document
+---
+
+```{r}
+start_time <- Sys.time()
+```
+
+Load libraries
+
+```{r load_libraries_and_data, message=FALSE}
+# Package names
+packages <- c("benchmarkme", "dplyr", "forcats", "funData", "ggplot2", 
+              "patchwork", "tidyr")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+
+theme_set(theme_bw() +
+            theme(panel.grid.major=element_blank(),
+                  panel.grid.minor=element_blank(),
+                  strip.background=element_rect(fill="white"),
+                  strip.text=element_text(size=10, face="bold"),
+                  plot.title=element_text(hjust=.5),
+                  axis.text.x = element_text(color="black"),
+                  axis.text.y = element_text(color="black"),
+                  axis.ticks = element_line(color = "black")
+            )
+          )
+
+mcb <- c("#D55E00", "#56B4E9", "#E69F00", "#009E73", "#CC79A7")
+LABS <- lapply(c(0.1, 0.3, 1.0), function(i) bquote(lambda==.(i)))
+std_shift <- function(i) sqrt(exp(-(i+1)/2))
+```
+
+```{r}
+RUNS <- 1:100
+DIR <- "data/simulations/"
+df1 <- purrr::map_df(paste0(DIR,"MEWMA_ARL_r_", 0.1 , 
+                            "_N_300_RUN_", RUNS, ".rds"), readRDS) |>
+  group_by(EFI, delta_vec) |>
+  mutate(AARL=mean(ARL), stdARL=sd(ARL), EFI=factor(EFI)) |>
+  ungroup()
+
+df2 <- purrr::map_df(paste0(DIR,"MEWMA_ARL_r_", 0.3 , 
+                            "_N_300_RUN_", RUNS, ".rds"), readRDS) |>
+  group_by(EFI, delta_vec) |>
+  mutate(AARL=mean(ARL), stdARL=sd(ARL), EFI=factor(EFI)) |>
+  ungroup()
+
+df3 <- purrr::map_df(paste0(DIR,"MEWMA_ARL_r_", 1 , 
+                            "_N_300_RUN_", RUNS, ".rds"), readRDS) |>
+  group_by(EFI, delta_vec) |>
+  mutate(AARL=mean(ARL), stdARL=sd(ARL), EFI=factor(EFI)) |>
+  ungroup()
+```
+
+```{r}
+bind_rows(df1, df2, df3, .id="KAPPA") |> 
+  select(ARLSE) |>
+  filter(ARLSE==max(ARLSE))
+```
+
+```{r MEWMA_simulation_plots_normal_shift, fig.width=8.5, fig.height=3}
+p1 <- bind_rows(df1, df2, df3, .id="LAMBDA") |>
+  mutate(LAMBDA=factor(LAMBDA, labels=LABS)) |>
+  ggplot(aes(x=delta_vec, y=AARL, group=LAMBDA, colour=LAMBDA, fill=LAMBDA)) +
+    geom_line() +
+    geom_ribbon(aes(ymin=AARL-stdARL, ymax=AARL+stdARL), alpha=.2, colour=NA) +
+    labs(y="ARL approximation", x=bquote(Shift~size~delta)) +
+    scale_y_log10(breaks=c(1, 10, 50, 100)) +
+    facet_wrap(~EFI, labeller=label_bquote(cols=FPC~.(EFI))) +
+    scale_colour_manual(values = mcb[c(2,3,5)], labels=LABS) +
+    scale_fill_manual(values = mcb[c(2,3,5)], labels=LABS) +
+    theme(legend.position="inside", legend.position.inside=c(.9,.7), legend.title=element_blank())
+```
+
+```{r MEWMA_simulation_plots_standardized_shift, fig.width=8.5, fig.height=3}
+p2 <- bind_rows(df1, df2, df3, .id="LAMBDA") |>
+  mutate(LAMBDA=factor(LAMBDA, labels=LABS), 
+         std_shift=delta_vec/std_shift(as.numeric(EFI))) |>
+  ggplot(aes(x=std_shift, y=AARL, group=LAMBDA, colour=LAMBDA, fill=LAMBDA)) +
+    geom_line() +
+    geom_ribbon(aes(ymin=AARL-stdARL, ymax=AARL+stdARL), alpha=.2, colour=NA) +
+    labs(y="ARL approximation", 
+         x=bquote(Standardized~shift~size~frac(delta, sqrt(nu[r])))) +
+    scale_y_log10(breaks=c(1, 10, 50, 100)) +
+    scale_x_continuous(breaks=c(1:11)) +
+    facet_wrap(~EFI, labeller=label_bquote(cols=FPC~.(EFI))) +
+    scale_colour_manual(values = mcb[c(2,3,5)], labels=LABS) +
+    scale_fill_manual(values = mcb[c(2,3,5)], labels=LABS) +
+    theme(legend.position="none", legend.title=element_blank())
+```
+
+```{r Figure_5_MEWMA_simulation_plots_combined, fig.width=8.5, fig.height=6}
+p1 + p2 + plot_layout(ncol=1)
+```
+
+## Computational and session information
+
+Hardware information:
+
+```{r extract_hardware_specification}
+get_cpu()
+get_ram()
+```
+
+Computation time:
+
+```{r computational_time}
+print(paste("Computation time:", round(Sys.time() - start_time, 2)[[1]], "seconds"))
+```
+Session information:
+
+```{r session_info}
+sessionInfo()
+```

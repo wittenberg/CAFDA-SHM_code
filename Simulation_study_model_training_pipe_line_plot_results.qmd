@@ -1,0 +1,286 @@
+---
+title: "Covariate-Adjusted Functional Data Analysis for Structural Health Monitoring"
+subtitle: "Simulations: model training pipe line plot results"
+
+# Freeze computed outputs
+freeze: true
+
+# Enable banner style title blocks
+title-block-banner: true
+
+# Enable CC licence appendix
+license: "CC BY"
+
+# Default for table of contents
+toc: true
+toc-title: Table of contents
+toc-location: left
+
+# Default knitr options
+execute:
+  echo: true
+  message: true
+  warning: true
+cache: false
+
+date: "10/07/2024" 
+format:
+  html:
+    embed-resources: false
+    code-fold: false
+    code-summary: "Code"
+    code-tools:
+      source: true
+      toggle: true
+      caption: none
+
+knitr:
+  opts_chunk:
+    dev:
+      - png
+      - pdf
+      
+editor: source
+
+author:
+  - name: Philipp Wittenberg
+    corresponding: true
+    id: pw
+    orcid: 0000-0001-7151-8243
+    email: pwitten@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Lizzie Neumann
+    id: ln
+    orcid: 0000-0003-2256-1127
+    email: neumannl@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Alexander Mendler
+    id: ln
+    orcid: 0000-0002-7492-6194
+    email: alexander.mendler@tum.de
+    affiliation: 
+      - name: Technical University of Munich
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Jan Gertheiss
+    id: jg
+    orcid: 0000-0001-6777-4746
+    email: gertheij@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de        
+        
+        
+
+citation: 
+  container-title: arXiv:2408.02106
+  doi: 10.48550/arXiv.2408.02106
+  
+bibliography:
+  - literature.bib
+link-citations: true
+
+output: github_document
+---
+
+```{r}
+start_time <- Sys.time()
+```
+
+Load libraries
+
+```{r load_libraries_and_data, message=FALSE}
+# Package names
+packages <- c("benchmarkme", "dplyr", "forcats", "funData", "ggplot2", 
+              "patchwork", "tidyr")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+
+theme_set(theme_bw() +
+            theme(panel.grid.major=element_blank(),
+                  panel.grid.minor=element_blank(),
+                  strip.background=element_rect(fill="white"),
+                  strip.text=element_text(size=10, face="bold"),
+                  legend.title=element_blank(),
+                  plot.title=element_text(hjust=.5),
+                  axis.text.x = element_text(color="black"),
+                  axis.text.y = element_text(color="black"),
+                  axis.ticks = element_line(color = "black")
+            )
+          )
+
+res <- readRDS("data/simulations/Simulation_study_N300_NAOBS0_SEED42_REML.RDS")
+```
+
+```{r setup}
+SIZE  <- 1:100      ## Numer of simulation runs
+DAY   <- seq(.5, 23.5, 1)/24  ## Day profile sequence for estimation and plotting
+Tmin  <- 0          ## Minimum Temperature
+Tmax  <- 12         ## Maximum Temperature
+meanU <- 5          ## Mean Temperature level
+argvals   <- 2*pi*DAY
+```
+
+### plot intercept
+
+```{r plot_intercept}
+## plot intercept ##
+####################
+fundf1 <- bind_rows(lapply(SIZE, function(i) res[[i]][[1]][[i]] |>
+                      mutate(i=row_number()) ), .id="SEED") 
+
+## from original plain
+object2   <- funData::funData(argvals, outer(-.05, sin(argvals*1/2)+cos(argvals*2)))
+object3   <- object2@X-mean(object2@X)
+fun1plain <- data.frame(cbind("td01"=DAY, "est"=as.numeric(t(object3))))
+
+## mean from simulation
+fun1mean <- fundf1 |>
+  group_by(td01) |>
+  summarise(est=mean(est))
+
+p1 <- fundf1 |>
+  group_by(SEED) |>
+  mutate(td24=DAY*24) |>
+  ggplot(aes(x=td24, y=est, group=SEED)) +
+    geom_line(colour="grey45") +
+    scale_y_continuous(name="s(Time of day)") +
+    scale_x_continuous(name="Time of day [h]", breaks=seq(0, 24, 6)) +
+    scale_color_grey() +
+    geom_line(data=fun1plain, colour="darkblue", aes(x=DAY*24, y=est), 
+              inherit.aes=FALSE, linewidth=1.1) +
+    geom_line(data=fun1mean, colour="red", aes(x=DAY*24, y=est), 
+              inherit.aes=FALSE, linewidth=1.1)
+```
+
+### plot f(z)
+
+```{r plot_fz}
+###############
+## plot f(z) ##
+###############
+fundf2 <- bind_rows(lapply(SIZE, function(i) res[[i]][[2]][[i]] |>
+                      mutate(i=row_number()) ), .id="SEED") 
+
+## from original plain
+fb1   <- function(z) exp(-z/2.2)-.5 ## Transformation function f(z)
+fun2plain <- data.frame(cbind("z"=seq(Tmin, Tmax-.5, .01), 
+                              "est"=fb1(seq(Tmin, Tmax-.5, .01)) + meanU))
+
+## mean from simulation
+fun2mean <- fundf2 |>
+  group_by(z) |>
+  summarise(est=mean(est))
+
+p2 <- fundf2 |>
+  ggplot(aes(x=z, y=est, group=SEED)) +
+    geom_line(aes(colour="estimates")) +
+    scale_y_continuous(name="s(Temeprature)") +
+    scale_x_continuous(name="Temperature [°C]", breaks=seq(0,12,1)) +
+    geom_line(data=fun2plain, aes(x=z, y=est, colour="truth"), 
+              inherit.aes=FALSE, linewidth=1.1) +
+    geom_line(data=fun2mean, aes(x=z, y=est, colour="mean"), 
+              inherit.aes=FALSE, linewidth=1.1) +
+    scale_color_manual(values=c("grey45", "red", "darkblue")) +
+    theme(legend.position="inside",
+          legend.position.inside=c(.7, .7))
+
+```
+
+### plot eigenfunctions
+
+```{r plot_eigenfunctions}
+#########################
+## plot eigenfunctions ##
+#########################
+fundf3 <- bind_rows(lapply(seq_along(SIZE), function(i) res[[i]][[3]][[i]]), .id="SEED")
+
+## mean values of eigenfunctions
+fun3mean <- fundf3 |>
+  group_by(td01) |>
+  summarise(ef01=mean(ef01), ef02=mean(ef02), ef03=mean(ef03)) |>
+  pivot_longer(cols=starts_with("ef"), names_to="efcts") |>
+    mutate(efcts=fct_recode(as.factor(efcts),
+                      "1" = "ef01",
+                      "2" = "ef02",
+                      "3" = "ef03"))
+
+## simulate _structural_component
+plain <- simFunData(DAY*24, M=3, eFunType="Poly", eValType="exponential", N=1)
+
+fun3plain <- plain$trueFuns@X |> 
+  t() |>
+  'colnames<-' (sprintf("ef%02d", 1:3)) |>
+  data.frame() |>
+  mutate(td01=DAY) |>
+  pivot_longer(cols=starts_with("ef"), names_to="efcts") |>
+    mutate(efcts=fct_recode(as.factor(efcts),
+                      "1" = "ef01",
+                      "2" = "ef02",
+                      "3" = "ef03"))
+
+p3 <- 
+  fundf3 |>
+  pivot_longer(cols=starts_with("ef"), names_to="efcts") |>
+  mutate(efcts=fct_recode(as.factor(efcts),
+                      "1" = "ef01",
+                      "2" = "ef02",
+                      "3" = "ef03")) |>
+  mutate(efcts=as.character(efcts)) |>
+  ggplot(aes(x=td01*24, y=value, group=SEED)) +
+    geom_line(colour="grey65") +
+    facet_wrap(~efcts, scales="free_x", 
+               labeller=label_bquote(cols=Eigenfunction~phi[.(substr(efcts, 1, 3))](t))) +
+    scale_x_continuous(name="Time of day [h]", breaks=seq(0, 24, 6)) +
+    labs(y="") +
+    theme(legend.position="none") +
+    scale_color_grey() +
+      geom_line(data=fun3mean, colour="red", aes(x=td01*24, y=value, colour=efcts), 
+              inherit.aes=FALSE, linewidth=1.1) +
+      geom_line(data=fun3plain, aes(x=td01*24, y=value, colour=efcts), 
+              inherit.aes=FALSE, linewidth=1.1, colour="darkblue")
+```
+
+### combine plots
+
+```{r Figure_4_combine_plots_Simulation_study_N_300_NAOBS_0_SEED_42_ML, fig.width=8, fig.height=5}
+(p1 | p2) / p3
+```
+
+## Computational and session information
+
+Hardware information:
+
+```{r extract_hardware_specification}
+get_cpu()
+get_ram()
+```
+
+Computation time:
+
+```{r computational_time}
+print(paste("Computation time:", round(Sys.time() - start_time, 2)[[1]], "seconds"))
+```
+Session information:
+
+```{r session_info}
+sessionInfo()
+```

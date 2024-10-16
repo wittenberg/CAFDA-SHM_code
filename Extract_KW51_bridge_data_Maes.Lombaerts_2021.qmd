@@ -1,0 +1,193 @@
+---
+title: "Covariate-Adjusted Functional Data Analysis for Structural Health Monitoring"
+subtitle: "Download, extract and prepare bridge KW51 data: @Maes.Lombaert_2020 and @Maes.Lombaert_2021"
+    
+# Freeze computed outputs
+freeze: true
+
+# Enable banner style title blocks
+title-block-banner: true
+
+# Enable CC licence appendix
+license: "CC BY"
+
+# Default for table of contents
+toc: true
+toc-title: Table of contents
+toc-location: left
+
+# Default knitr options
+execute:
+  echo: true
+  message: true
+  warning: false
+  cache: false
+
+date: "10/07/2024" 
+format:
+  html:
+    embed-resources: false
+    code-fold: false
+    code-summary: "Code"
+    code-tools:
+      source: true
+      toggle: true
+      caption: none
+
+knitr:
+  opts_chunk:
+    dev:
+      - png
+      - pdf
+      
+editor: source
+
+author:
+  - name: Philipp Wittenberg
+    corresponding: true
+    id: pw
+    orcid: 0000-0001-7151-8243
+    email: pwitten@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Lizzie Neumann
+    id: ln
+    orcid: 0000-0003-2256-1127
+    email: neumannl@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Alexander Mendler
+    id: ln
+    orcid: 0000-0002-7492-6194
+    email: alexander.mendler@tum.de
+    affiliation: 
+      - name: Technical University of Munich
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Jan Gertheiss
+    id: jg
+    orcid: 0000-0001-6777-4746
+    email: gertheij@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de        
+        
+        
+
+citation: 
+  container-title: arXiv:2408.02106
+  doi: 10.48550/arXiv.2408.02106
+  
+bibliography:
+  - literature.bib
+link-citations: true
+
+output: github_document
+---
+
+# Load libraries
+
+```{r, message=FALSE}
+# Package names
+packages <- c("dplyr", "lubridate", "R.matlab", "tidyr", "tidyselect", "utils")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+```
+
+# Data preprocessing
+
+## Raw data import
+
+```{r raw_matlab_data_import, eval=TRUE}
+url <- "https://zenodo.org/records/3745914/files/trackedmodes.zip?download=1"
+path1 <- tempfile(fileext = ".zip")
+if (file.exists(path1))  'file alredy exists' else download.file(url, path1, mode="wb")
+unzip(zipfile = path1,exdir = tempdir())
+list.import.mat <- R.matlab::readMat(paste0(tempdir(),"/trackedmodes/trackedmodes.mat"))
+```
+
+## Extract environmental data
+
+```{r environmental_data, eval=TRUE}
+df1 <- list.import.mat$modes[7][[1]] |>
+  data.frame() |>
+  `colnames<-`(list.import.mat$modes[6][[1]] |> unlist()) |>
+  mutate(time=c(list.import.mat$modes[1][[1]])) |>
+  mutate(time=as.Date(time, tz="UTC", origin="0000-01-01")) |>
+  mutate(time=seq(
+    as.POSIXlt(paste0(date(first(time)), " 0:00:00"), tz="UTC"),
+    as.POSIXlt(paste0(date(last(time)), " 23:00:00"), tz="UTC"), by = "hour")) |>
+  mutate(tempdate=format(time, "%Y-%m-%d")) |>
+  group_by(tempdate) |>
+  mutate(ind_day=cur_group_id()) |>
+  ungroup() |>
+  dplyr::select(-(tempdate)) |>
+  rename(date=time)
+```
+
+## Extract Modal data
+
+```{r modal_data, eval=TRUE}
+df2 <- list.import.mat$modes[2][[1]] |>
+  data.frame() |>
+  'colnames<-' (sprintf("Mode_%02d", 1:14)) |>
+  mutate(time=c(list.import.mat$modes[1][[1]])) |>
+  mutate(time=as.Date(time, tz="UTC", origin="0000-01-01")) |>
+  mutate(time=seq(
+    as.POSIXlt(paste0(date(first(time)), " 0:00:00"), tz="UTC"),
+    as.POSIXlt(paste0(date(last(time)), " 23:00:00"), tz="UTC"), by = "hour")) |>
+  mutate(tempdate=format(time, "%Y-%m-%d")) |>
+  group_by(tempdate) |>
+  mutate(ind_day=cur_group_id()) |>
+  ungroup() |>
+  dplyr::select(-(tempdate)) |>
+  rename(date=time)
+```
+
+## Join data
+
+```{r join_data, eval=TRUE}
+df3 <- full_join(df1, df2, by=c("date", "ind_day")) |>
+  mutate(intervention=if_else(date<="2019-05-15 0:00:00", 0,
+                              if_else(date>="2019-09-27 0:00:00", 2, 1))) |>
+  mutate_all(~replace(., is.nan(.), NA))
+```
+
+## Create hourly data time series
+
+```{r hourly_times_series, eval=TRUE}
+df_hour <- data.frame(date=seq(
+    ymd_hms(paste0(date(first(df3$date)), " 0:00:00"), tz="UTC"),
+    ymd_hms(paste0(date(last(df3$date)), " 23:59:59"), tz="UTC"), by="hour")) |>
+  mutate(tempdate=format(date, "%Y-%m-%d")) |>
+  group_by(tempdate) |>
+  mutate(ind_hour=row_number()) |>
+  ungroup() |>
+  dplyr::select(-(tempdate)) |>
+  as_tibble()
+```
+
+## Join and save data sets
+
+```{r join_save_data, eval=TRUE}
+df4 <- left_join(df_hour, df3, by="date") |>
+  mutate(td01=ind_hour/24)
+
+saveRDS(df4, "data/Dataset_bridge_KW51.RDS")
+```

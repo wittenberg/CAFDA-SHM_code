@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.45">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Philipp Wittenberg">
+<meta name="author" content="Lizzie Neumann">
+<meta name="author" content="Alexander Mendler">
+<meta name="author" content="Jan Gertheiss">
+<meta name="dcterms.date" content="2024-10-07">
+
+<title>Covariate-Adjusted Functional Data Analysis for Structural Health Monitoring</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Case_study_1_computational_results_KW51_Mode06_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Case_study_1_computational_results_KW51_Mode06_files/libs/quarto-html/quarto.js"></script>
+<script src="Case_study_1_computational_results_KW51_Mode06_files/libs/quarto-html/popper.min.js"></script>
+<script src="Case_study_1_computational_results_KW51_Mode06_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Case_study_1_computational_results_KW51_Mode06_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Case_study_1_computational_results_KW51_Mode06_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Case_study_1_computational_results_KW51_Mode06_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Case_study_1_computational_results_KW51_Mode06_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Case_study_1_computational_results_KW51_Mode06_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Case_study_1_computational_results_KW51_Mode06_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body>
+
+<header id="title-block-header" class="quarto-title-block default toc-left page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <div class="quarto-title-block"><div><h1 class="title">Covariate-Adjusted Functional Data Analysis for Structural Health Monitoring</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i></button></div></div>
+            <p class="subtitle lead">KW51: Mode 06 computing results</p>
+                      </div>
+  </div>
+    
+  <div class="quarto-title-meta-author">
+    <div class="quarto-title-meta-heading">Authors</div>
+    <div class="quarto-title-meta-heading">Affiliations</div>
+    
+      <div class="quarto-title-meta-contents">
+      <p class="author">Philipp Wittenberg <a href="mailto:pwitten@hsu-hh.de" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> <a href="https://orcid.org/0000-0001-7151-8243" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+    </div>
+    <div class="quarto-title-meta-contents">
+          <p class="affiliation">
+              <a href="www.hsu-hh.de">
+              Helmut Schmidt University
+              </a>
+            </p>
+        </div>
+      <div class="quarto-title-meta-contents">
+      <p class="author">Lizzie Neumann <a href="mailto:neumannl@hsu-hh.de" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> <a href="https://orcid.org/0000-0003-2256-1127" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+    </div>
+    <div class="quarto-title-meta-contents">
+          <p class="affiliation">
+              <a href="www.hsu-hh.de">
+              Helmut Schmidt University
+              </a>
+            </p>
+        </div>
+      <div class="quarto-title-meta-contents">
+      <p class="author">Alexander Mendler <a href="mailto:alexander.mendler@tum.de" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> <a href="https://orcid.org/0000-0002-7492-6194" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+    </div>
+    <div class="quarto-title-meta-contents">
+          <p class="affiliation">
+              <a href="www.hsu-hh.de">
+              Technical University of Munich
+              </a>
+            </p>
+        </div>
+      <div class="quarto-title-meta-contents">
+      <p class="author">Jan Gertheiss <a href="mailto:gertheij@hsu-hh.de" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> <a href="https://orcid.org/0000-0001-6777-4746" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+    </div>
+    <div class="quarto-title-meta-contents">
+          <p class="affiliation">
+              <a href="www.hsu-hh.de">
+              Helmut Schmidt University
+              </a>
+            </p>
+        </div>
+    </div>
+
+  <div class="quarto-title-meta">
+
+        
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">October 7, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#temperature-effect-plus-recurring-daily-pattern" id="toc-temperature-effect-plus-recurring-daily-pattern" class="nav-link active" data-scroll-target="#temperature-effect-plus-recurring-daily-pattern">Temperature effect plus recurring daily pattern</a>
+  <ul class="collapse">
+  <li><a href="#step-1-initial-model" id="toc-step-1-initial-model" class="nav-link" data-scroll-target="#step-1-initial-model">Step: 1 Initial model</a></li>
+  <li><a href="#structural-component-w-fpca" id="toc-structural-component-w-fpca" class="nav-link" data-scroll-target="#structural-component-w-fpca">Structural component <span class="math inline">\(w\)</span> (FPCA)</a></li>
+  <li><a href="#step-2-fpca" id="toc-step-2-fpca" class="nav-link" data-scroll-target="#step-2-fpca">Step: 2 FPCA</a></li>
+  <li><a href="#step-3-refitted-model" id="toc-step-3-refitted-model" class="nav-link" data-scroll-target="#step-3-refitted-model">Step: 3 Refitted model</a></li>
+  <li><a href="#save-data" id="toc-save-data" class="nav-link" data-scroll-target="#save-data">Save data</a></li>
+  </ul></li>
+  <li><a href="#varying-daily-pattern" id="toc-varying-daily-pattern" class="nav-link" data-scroll-target="#varying-daily-pattern">Varying daily pattern</a>
+  <ul class="collapse">
+  <li><a href="#step-1-initial-model-1" id="toc-step-1-initial-model-1" class="nav-link" data-scroll-target="#step-1-initial-model-1">Step: 1 Initial model</a></li>
+  <li><a href="#structural-component-w-fpca-1" id="toc-structural-component-w-fpca-1" class="nav-link" data-scroll-target="#structural-component-w-fpca-1">Structural component <span class="math inline">\(w\)</span> (FPCA)</a></li>
+  <li><a href="#step-2-fpca-1" id="toc-step-2-fpca-1" class="nav-link" data-scroll-target="#step-2-fpca-1">Step: 2 FPCA</a></li>
+  <li><a href="#step-3-refitted-model-1" id="toc-step-3-refitted-model-1" class="nav-link" data-scroll-target="#step-3-refitted-model-1">Step: 3 Refitted model</a></li>
+  <li><a href="#save-data-1" id="toc-save-data-1" class="nav-link" data-scroll-target="#save-data-1">Save data</a></li>
+  </ul></li>
+  <li><a href="#temperature-and-relative-humidity-effect-plus-varying-daily-pattern" id="toc-temperature-and-relative-humidity-effect-plus-varying-daily-pattern" class="nav-link" data-scroll-target="#temperature-and-relative-humidity-effect-plus-varying-daily-pattern">Temperature and relative humidity effect plus varying daily pattern</a>
+  <ul class="collapse">
+  <li><a href="#step-1-initial-model-2" id="toc-step-1-initial-model-2" class="nav-link" data-scroll-target="#step-1-initial-model-2">Step: 1 Initial model</a></li>
+  <li><a href="#structural-component-w-fpca-2" id="toc-structural-component-w-fpca-2" class="nav-link" data-scroll-target="#structural-component-w-fpca-2">Structural component <span class="math inline">\(w\)</span> (FPCA)</a></li>
+  <li><a href="#step-2-fpca-2" id="toc-step-2-fpca-2" class="nav-link" data-scroll-target="#step-2-fpca-2">Step: 2 FPCA</a></li>
+  <li><a href="#step-3-refitted-model-2" id="toc-step-3-refitted-model-2" class="nav-link" data-scroll-target="#step-3-refitted-model-2">Step: 3 Refitted model</a></li>
+  <li><a href="#save-data-2" id="toc-save-data-2" class="nav-link" data-scroll-target="#save-data-2">Save data</a></li>
+  </ul></li>
+  <li><a href="#temperature-and-relative-humidity-effect-interaction-plus-varying-daily-pattern" id="toc-temperature-and-relative-humidity-effect-interaction-plus-varying-daily-pattern" class="nav-link" data-scroll-target="#temperature-and-relative-humidity-effect-interaction-plus-varying-daily-pattern">Temperature and relative humidity effect (interaction) plus varying daily pattern</a>
+  <ul class="collapse">
+  <li><a href="#step-1-initial-model-3" id="toc-step-1-initial-model-3" class="nav-link" data-scroll-target="#step-1-initial-model-3">Step: 1 Initial model</a></li>
+  <li><a href="#structural-component-w-fpca-3" id="toc-structural-component-w-fpca-3" class="nav-link" data-scroll-target="#structural-component-w-fpca-3">Structural component <span class="math inline">\(w\)</span> (FPCA)</a></li>
+  <li><a href="#step-2-fpca-3" id="toc-step-2-fpca-3" class="nav-link" data-scroll-target="#step-2-fpca-3">Step: 2 FPCA</a></li>
+  <li><a href="#step-3-refitted-model-3" id="toc-step-3-refitted-model-3" class="nav-link" data-scroll-target="#step-3-refitted-model-3">Step: 3 Refitted model</a></li>
+  <li><a href="#save-data-3" id="toc-save-data-3" class="nav-link" data-scroll-target="#save-data-3">Save data</a></li>
+  </ul></li>
+  <li><a href="#computational-and-session-information" id="toc-computational-and-session-information" class="nav-link" data-scroll-target="#computational-and-session-information">Computational and session information</a></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>start_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Load libraries</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Package names</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>packages <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"benchmarkme"</span>, <span class="st">"dplyr"</span>, <span class="st">"gamm4"</span>, <span class="st">"gratia"</span>, <span class="st">"mgcv"</span>, <span class="st">"refund"</span>, </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>              <span class="st">"tidyr"</span>, <span class="st">"xtable"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Install packages not yet installed</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>installed_packages <span class="ot">&lt;-</span> packages <span class="sc">%in%</span> <span class="fu">rownames</span>(<span class="fu">installed.packages</span>())</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">any</span>(installed_packages <span class="sc">==</span> <span class="cn">FALSE</span>)) {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(packages[<span class="sc">!</span>installed_packages])</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Packages loading</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">invisible</span>(<span class="fu">lapply</span>(packages, library, <span class="at">character.only =</span> <span class="cn">TRUE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dta  <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/Dataset_bridge_KW51.RDS"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>var  <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"temp"</span>, <span class="st">"mode"</span>, <span class="st">"ind_day"</span>, <span class="st">"ind_hour"</span>, <span class="st">"td01"</span>, <span class="st">"humid"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>nc   <span class="ot">&lt;-</span> <span class="dv">8</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>dta0 <span class="ot">&lt;-</span> <span class="fu">filter</span>(dta, intervention<span class="sc">==</span><span class="dv">0</span>) <span class="sc">|&gt;</span> <span class="fu">rename</span>(<span class="at">temp=</span>tBD31A, <span class="at">humid=</span>rhBD31A)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>dta1 <span class="ot">&lt;-</span> <span class="fu">filter</span>(dta, intervention<span class="sc">!=</span><span class="dv">2</span>) <span class="sc">|&gt;</span> <span class="fu">rename</span>(<span class="at">temp=</span>tBD31A, <span class="at">humid=</span>rhBD31A)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>dta2 <span class="ot">&lt;-</span> dta <span class="sc">|&gt;</span> <span class="fu">rename</span>(<span class="at">temp=</span>tBD31A, <span class="at">humid=</span>rhBD31A)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>M <span class="ot">&lt;-</span> (<span class="fu">sprintf</span>(<span class="st">"Mode_%02d"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">14</span>))</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>i <span class="ot">&lt;-</span> <span class="dv">06</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>dtai <span class="ot">&lt;-</span> dta0 <span class="sc">|&gt;</span> </span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(td01, temp, humid, <span class="fu">all_of</span>(M), ind_day, ind_hour, date) <span class="sc">|&gt;</span> </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">mode=</span>M[i]) <span class="sc">|&gt;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(temp, humid, mode, ind_day, ind_hour, date) <span class="sc">|&gt;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(ind_day) <span class="sc">|&gt;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ind_day<span class="sc">&lt;=</span><span class="dv">200</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">td01 =</span> <span class="fu">seq</span>(.<span class="dv">5</span>, <span class="fl">23.5</span>, <span class="dv">1</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>nd <span class="ot">&lt;-</span> dtai<span class="sc">$</span>ind_day <span class="sc">|&gt;</span> <span class="fu">n_distinct</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>LIMITS <span class="ot">&lt;-</span> dtai <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(ind_day<span class="sc">&lt;=</span><span class="dv">200</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(mode) <span class="sc">|&gt;</span> </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mmean =</span> <span class="fu">mean</span>(mode, <span class="at">na.rm=</span><span class="cn">TRUE</span>),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">msd   =</span> <span class="fu">sd</span>(mode, <span class="at">na.rm=</span><span class="cn">TRUE</span>),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">upperLimit=</span>mmean<span class="sc">+</span><span class="dv">3</span><span class="sc">*</span>msd,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">lowerLimit=</span>mmean<span class="dv">-3</span><span class="sc">*</span>msd) </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>dtai <span class="ot">&lt;-</span> dtai <span class="sc">|&gt;</span> </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">mode=</span><span class="fu">replace</span>(mode, mode<span class="sc">&gt;</span>LIMITS<span class="sc">$</span>upperLimit <span class="sc">&amp;</span> ind_day<span class="sc">%in%</span><span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">200</span>), <span class="cn">NA</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">mode=</span><span class="fu">replace</span>(mode, mode<span class="sc">&lt;</span>LIMITS<span class="sc">$</span>lowerLimit <span class="sc">&amp;</span> ind_day<span class="sc">%in%</span><span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">200</span>), <span class="cn">NA</span>))</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(dtai)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 7
+   temp humid  mode ind_day ind_hour date                 td01
+  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;int&gt;    &lt;int&gt; &lt;dttm&gt;              &lt;dbl&gt;
+1    NA    NA    NA       1        1 2018-10-02 00:00:00   0.5
+2    NA    NA    NA       1        2 2018-10-02 01:00:00   1.5
+3    NA    NA    NA       1        3 2018-10-02 02:00:00   2.5
+4    NA    NA    NA       1        4 2018-10-02 03:00:00   3.5
+5    NA    NA    NA       1        5 2018-10-02 04:00:00   4.5
+6    NA    NA    NA       1        6 2018-10-02 05:00:00   5.5</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(dtai)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 7
+   temp humid  mode ind_day ind_hour date                 td01
+  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;int&gt;    &lt;int&gt; &lt;dttm&gt;              &lt;dbl&gt;
+1  22.7  32.2  2.91     200       19 2019-04-19 18:00:00  18.5
+2  21.8  34.8  2.91     200       20 2019-04-19 19:00:00  19.5
+3  20.9  36.7  2.92     200       21 2019-04-19 20:00:00  20.5
+4  19.8  42.8  2.92     200       22 2019-04-19 21:00:00  21.5
+5  18.5  45.7  2.92     200       23 2019-04-19 22:00:00  22.5
+6  17.9  44.3  2.91     200       24 2019-04-19 23:00:00  23.5</code></pre>
+</div>
+</div>
+<section id="temperature-effect-plus-recurring-daily-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="temperature-effect-plus-recurring-daily-pattern">Temperature effect plus recurring daily pattern</h2>
+<section id="step-1-initial-model" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-initial-model">Step: 1 Initial model</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>gam2 <span class="ot">&lt;-</span> <span class="fu">gam</span>(mode <span class="sc">~</span> <span class="fu">s</span>(td01, <span class="at">bs=</span><span class="st">"cc"</span>) <span class="sc">+</span> <span class="fu">s</span>(temp, <span class="at">bs=</span><span class="st">"cr"</span>), <span class="at">data=</span>dtai, </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">method=</span><span class="st">"GCV.Cp"</span>, <span class="at">control=</span><span class="fu">list</span>(<span class="at">nthreads=</span>nc))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(gam2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Family: gaussian 
+Link function: identity 
+
+Formula:
+mode ~ s(td01, bs = "cc") + s(temp, bs = "cr")
+
+Parametric coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 2.925e+00  8.085e-05   36173   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Approximate significance of smooth terms:
+          edf Ref.df      F p-value    
+s(td01) 7.674  8.000  10.99  &lt;2e-16 ***
+s(temp) 7.269  8.094 292.63  &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+R-sq.(adj) =  0.436   Deviance explained = 43.9%
+GCV = 2.2401e-05  Scale est. = 2.2296e-05  n = 3411</code></pre>
+</div>
+</div>
+</section>
+<section id="structural-component-w-fpca" class="level3">
+<h3 class="anchored" data-anchor-id="structural-component-w-fpca">Structural component <span class="math inline">\(w\)</span> (FPCA)</h3>
+<section id="assign-residuals" class="level4">
+<h4 class="anchored" data-anchor-id="assign-residuals">Assign residuals</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>dtaiA2 <span class="ot">&lt;-</span> <span class="fu">left_join</span>(dtai, </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">drop_na</span>(dtai, mode, temp) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">gam2res=</span>gam2<span class="sc">$</span>residuals), </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                    <span class="at">by=</span>var)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="step-2-fpca" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-fpca">Step: 2 FPCA</h3>
+<section id="fpca" class="level4">
+<h4 class="anchored" data-anchor-id="fpca">FPCA</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># find days without any data (only NA's)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>NAgeq24 <span class="ot">&lt;-</span> dtaiA2 <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(gam2res, ind_day, ind_hour) <span class="sc">|&gt;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(ind_day)<span class="sc">|&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="sc">-</span><span class="fu">c</span>(ind_hour), <span class="sc">~</span><span class="fu">sum</span>(<span class="fu">is.na</span>(.))<span class="sc">&gt;=</span><span class="dv">21</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(gam2res<span class="sc">==</span><span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>gam2res)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>fpcaRes <span class="ot">&lt;-</span> <span class="fu">fpca.face</span>(</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">Y=</span>dtaiA2 <span class="sc">|&gt;</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(gam2res, ind_day, ind_hour) <span class="sc">|&gt;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span>ind_day <span class="sc">%in%</span> NAgeq24<span class="sc">$</span>ind_day) <span class="sc">|&gt;</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_wider</span>(<span class="at">names_from=</span>ind_day, <span class="at">values_from=</span>gam2res) <span class="sc">|&gt;</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>ind_hour) <span class="sc">|&gt;</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.matrix</span>() <span class="sc">|&gt;</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">t</span>(),</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">knots=</span><span class="dv">20</span>,</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="at">pve=</span>.<span class="dv">99</span>)</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(fpcaRes, <span class="st">"data/mode06_gam2_fpcaRes.RDS"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="prepare-for-refit-with-functional-random-effects" class="level4">
+<h4 class="anchored" data-anchor-id="prepare-for-refit-with-functional-random-effects">Prepare for refit with functional random effects</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dtaiB2 <span class="ot">&lt;-</span> <span class="fu">left_join</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  dtai, dtaiA2 <span class="sc">|&gt;</span> <span class="fu">mutate</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    fpcaRes<span class="sc">$</span>efunctions <span class="sc">|&gt;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>() <span class="sc">|&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">slice</span>(<span class="fu">rep</span>(<span class="fu">row_number</span>(), nd)) <span class="sc">|&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'colnames&lt;-'</span> (<span class="fu">sprintf</span>(<span class="st">"ef%02d"</span>, <span class="dv">1</span><span class="sc">:</span>fpcaRes<span class="sc">$</span>npc)))</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  , <span class="at">by=</span>var) <span class="sc">|&gt;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">ind_dayf=</span><span class="fu">factor</span>(ind_day))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="step-3-refitted-model" class="level3">
+<h3 class="anchored" data-anchor-id="step-3-refitted-model">Step: 3 Refitted model</h3>
+<section id="refit-with-functional-random-effects-lme4-and-mgcv" class="level4">
+<h4 class="anchored" data-anchor-id="refit-with-functional-random-effects-lme4-and-mgcv">Refit with functional random effects (lme4 and mgcv)</h4>
+</section>
+<section id="lme-and-mgcv-model-estimation" class="level4">
+<h4 class="anchored" data-anchor-id="lme-and-mgcv-model-estimation">lme and mgcv model estimation</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>eq <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"mode~"</span>, <span class="st">"s("</span>, <span class="st">"td01"</span>, <span class="st">", bs = 'cc')"</span>, <span class="st">"+"</span>, <span class="st">"s("</span>, <span class="st">"temp"</span>, <span class="st">", bs = 'cr')"</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>re <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"~"</span>, <span class="fu">paste</span>((<span class="fu">sprintf</span>(<span class="st">"ef%02d"</span>, <span class="dv">1</span><span class="sc">:</span>fpcaRes<span class="sc">$</span>npc)), <span class="at">collapse=</span><span class="st">"+"</span>), <span class="st">"-1"</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>gam2d <span class="ot">&lt;-</span> <span class="fu">gamm</span>(<span class="fu">as.formula</span>(eq), <span class="at">data=</span>dtaiB2, <span class="at">random=</span><span class="fu">list</span>(<span class="at">ind_dayf=</span><span class="fu">pdDiag</span>(<span class="fu">as.formula</span>(re))), </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">control=</span><span class="fu">list</span>(<span class="at">msMaxIter=</span><span class="dv">100</span>, <span class="at">msMaxEval=</span><span class="dv">1000</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="compute-r2-for-fixed-effect-model" class="level4">
+<h4 class="anchored" data-anchor-id="compute-r2-for-fixed-effect-model">Compute R2 for fixed effect model</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>dtaiC2 <span class="ot">&lt;-</span> <span class="fu">right_join</span>(dtaiB2, <span class="fu">drop_na</span>(dtai, mode, temp) <span class="sc">|&gt;</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">mutate</span>(<span class="at">fitted_values=</span>gam2d<span class="sc">$</span>gam<span class="sc">$</span>fitted.values), <span class="at">by=</span>var)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>dtaiD2 <span class="ot">&lt;-</span> dtaiC2 <span class="sc">|&gt;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(date.x, ind_day, ind_hour, fitted_values, mode) <span class="sc">|&gt;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">nominator=</span>(mode<span class="sc">-</span>fitted_values)<span class="sc">^</span><span class="dv">2</span>, <span class="at">denominator=</span>(mode<span class="sc">-</span><span class="fu">mean</span>(mode))<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>R2gam2d <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">-</span>(<span class="fu">sum</span>(dtaiD2<span class="sc">$</span>nominator)<span class="sc">/</span><span class="fu">sum</span>(dtaiD2<span class="sc">$</span>denominator))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="save-data" class="level3">
+<h3 class="anchored" data-anchor-id="save-data">Save data</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(gam2d, <span class="at">file=</span><span class="st">"data/mode06_gam2d.RDS"</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(dtaiB2, <span class="at">file=</span><span class="st">"data/mode06_dtaiB2.RDS"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="varying-daily-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="varying-daily-pattern">Varying daily pattern</h2>
+<section id="step-1-initial-model-1" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-initial-model-1">Step: 1 Initial model</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>gam4 <span class="ot">&lt;-</span> <span class="fu">gam</span>(mode <span class="sc">~</span> <span class="fu">te</span>(td01, ind_day, <span class="at">bs=</span><span class="st">"cc"</span>), <span class="at">data=</span>dtai, <span class="at">method=</span><span class="st">"GCV.Cp"</span>, </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">control=</span><span class="fu">list</span>(<span class="at">nthreads=</span>nc))</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(gam4)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Family: gaussian 
+Link function: identity 
+
+Formula:
+mode ~ te(td01, ind_day, bs = "cc")
+
+Parametric coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 2.924e+00  7.893e-05   37046   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Approximate significance of smooth terms:
+                   edf Ref.df     F p-value    
+te(td01,ind_day) 11.82     15 98.87  &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+R-sq.(adj) =  0.251   Deviance explained = 25.3%
+GCV = 2.804e-05  Scale est. = 2.796e-05  n = 4488</code></pre>
+</div>
+</div>
+</section>
+<section id="structural-component-w-fpca-1" class="level3">
+<h3 class="anchored" data-anchor-id="structural-component-w-fpca-1">Structural component <span class="math inline">\(w\)</span> (FPCA)</h3>
+<section id="assign-residuals-1" class="level4">
+<h4 class="anchored" data-anchor-id="assign-residuals-1">Assign residuals</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>dtaiA4 <span class="ot">&lt;-</span> <span class="fu">left_join</span>(dtai, </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">drop_na</span>(dtai, mode) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">gam4res=</span>gam4<span class="sc">$</span>residuals), </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                    <span class="at">by=</span>var)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="step-2-fpca-1" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-fpca-1">Step: 2 FPCA</h3>
+<section id="fpca-1" class="level4">
+<h4 class="anchored" data-anchor-id="fpca-1">FPCA</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>NAgeq24 <span class="ot">&lt;-</span> dtaiA4 <span class="sc">|&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(gam4res, ind_day, ind_hour) <span class="sc">|&gt;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(ind_day)<span class="sc">|&gt;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="sc">-</span><span class="fu">c</span>(ind_hour), <span class="sc">~</span><span class="fu">sum</span>(<span class="fu">is.na</span>(.))<span class="sc">&gt;=</span><span class="dv">21</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(gam4res<span class="sc">==</span><span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>gam4res)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>fpcaRes <span class="ot">&lt;-</span> <span class="fu">fpca.face</span>(</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">Y=</span>dtaiA4 <span class="sc">|&gt;</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(gam4res, ind_day, ind_hour) <span class="sc">|&gt;</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(<span class="sc">!</span>ind_day <span class="sc">%in%</span> NAgeq24<span class="sc">$</span>ind_day) <span class="sc">|&gt;</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">pivot_wider</span>(<span class="at">names_from=</span>ind_day, <span class="at">values_from=</span>gam4res) <span class="sc">|&gt;</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>ind_hour) <span class="sc">|&gt;</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as.matrix</span>() <span class="sc">|&gt;</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>      <span class="fu">t</span>(),</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">knots=</span><span class="dv">20</span>,</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">pve=</span>.<span class="dv">99</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="prepare-for-refit-with-functional-random-effects-1" class="level4">
+<h4 class="anchored" data-anchor-id="prepare-for-refit-with-functional-random-effects-1">Prepare for refit with functional random effects</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>dtaiB4 <span class="ot">&lt;-</span> <span class="fu">left_join</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  dtai, dtaiA4 <span class="sc">|&gt;</span> <span class="fu">mutate</span>(</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    fpcaRes<span class="sc">$</span>efunctions <span class="sc">|&gt;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>() <span class="sc">|&gt;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">slice</span>(<span class="fu">rep</span>(<span class="fu">row_number</span>(), nd)) <span class="sc">|&gt;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'colnames&lt;-'</span> (<span class="fu">sprintf</span>(<span class="st">"ef%02d"</span>, <span class="dv">1</span><span class="sc">:</span>fpcaRes<span class="sc">$</span>npc)))</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  , <span class="at">by=</span>var) <span class="sc">|&gt;</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">ind_dayf=</span><span class="fu">factor</span>(ind_day))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="step-3-refitted-model-1" class="level3">
+<h3 class="anchored" data-anchor-id="step-3-refitted-model-1">Step: 3 Refitted model</h3>
+<section id="refit-with-functional-random-effects-lme4-and-mgcv-1" class="level4">
+<h4 class="anchored" data-anchor-id="refit-with-functional-random-effects-lme4-and-mgcv-1">Refit with functional random effects (lme4 and mgcv)</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>eq <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"mode~te("</span>, <span class="st">"td01, ind_day"</span>, <span class="st">",bs = 'cc')"</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>re <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"~"</span>, <span class="fu">paste</span>((<span class="fu">sprintf</span>(<span class="st">"ef%02d"</span>, <span class="dv">1</span><span class="sc">:</span>fpcaRes<span class="sc">$</span>npc)), <span class="at">collapse=</span><span class="st">"+"</span>), <span class="st">"-1"</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>gam4d <span class="ot">&lt;-</span> <span class="fu">gamm</span>(<span class="fu">as.formula</span>(eq), <span class="at">data=</span>dtaiB4, <span class="at">random=</span><span class="fu">list</span>(<span class="at">ind_dayf=</span><span class="fu">pdDiag</span>(<span class="fu">as.formula</span>(re))),</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">control=</span><span class="fu">list</span>(<span class="at">msMaxIter=</span><span class="dv">1000</span>, <span class="at">msMaxEval=</span><span class="dv">1000</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="compute-r2-for-fixed-effect-model-1" class="level4">
+<h4 class="anchored" data-anchor-id="compute-r2-for-fixed-effect-model-1">Compute R2 for fixed effect model</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>dtaiC4 <span class="ot">&lt;-</span> <span class="fu">right_join</span>(dtaiB4, <span class="fu">drop_na</span>(dtai, mode) <span class="sc">|&gt;</span> </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">mutate</span>(<span class="at">fitted_values=</span>gam4d<span class="sc">$</span>gam<span class="sc">$</span>fitted.values), <span class="at">by=</span>var)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>dtaiD4 <span class="ot">&lt;-</span> dtaiC4 <span class="sc">|&gt;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(date.x, ind_day, ind_hour, fitted_values, mode) <span class="sc">|&gt;</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">nominator=</span>(mode<span class="sc">-</span>fitted_values)<span class="sc">^</span><span class="dv">2</span>, <span class="at">denominator=</span>(mode<span class="sc">-</span><span class="fu">mean</span>(mode))<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>R2gam4d <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">-</span>(<span class="fu">sum</span>(dtaiD4<span class="sc">$</span>nominator)<span class="sc">/</span><span class="fu">sum</span>(dtaiD4<span class="sc">$</span>denominator))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="save-data-1" class="level3">
+<h3 class="anchored" data-anchor-id="save-data-1">Save data</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(gam4d, <span class="at">file=</span><span class="st">"data/mode06_gam4d.RDS"</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(dtaiB4, <span class="at">file=</span><span class="st">"data/mode06_dtaiB4.RDS"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="temperature-and-relative-humidity-effect-plus-varying-daily-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="temperature-and-relative-humidity-effect-plus-varying-daily-pattern">Temperature and relative humidity effect plus varying daily pattern</h2>
+<section id="step-1-initial-model-2" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-initial-model-2">Step: 1 Initial model</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>gam6 <span class="ot">&lt;-</span> <span class="fu">gam</span>(mode <span class="sc">~</span>  <span class="fu">te</span>(td01, ind_day, <span class="at">bs=</span><span class="st">"cc"</span>) <span class="sc">+</span> <span class="fu">s</span>(temp, <span class="at">bs=</span><span class="st">"cr"</span>) <span class="sc">+</span> </span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>              <span class="fu">s</span>(humid, <span class="at">bs=</span><span class="st">"cr"</span>), <span class="at">data=</span>dtai, <span class="at">method=</span><span class="st">"GCV.Cp"</span>, </span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">control=</span><span class="fu">list</span>(<span class="at">nthreads=</span>nc))</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(gam6)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Family: gaussian 
+Link function: identity 
+
+Formula:
+mode ~ te(td01, ind_day, bs = "cc") + s(temp, bs = "cr") + s(humid, 
+    bs = "cr")
+
+Parametric coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 2.924e+00  9.477e-05   30853   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Approximate significance of smooth terms:
+                   edf Ref.df       F p-value    
+te(td01,ind_day) 9.404 15.000   4.588  &lt;2e-16 ***
+s(temp)          8.232  8.753 136.334  &lt;2e-16 ***
+s(humid)         7.036  7.926   8.476  &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+R-sq.(adj) =  0.541   Deviance explained = 54.6%
+GCV = 2.0601e-05  Scale est. = 2.0368e-05  n = 2268</code></pre>
+</div>
+</div>
+</section>
+<section id="structural-component-w-fpca-2" class="level3">
+<h3 class="anchored" data-anchor-id="structural-component-w-fpca-2">Structural component <span class="math inline">\(w\)</span> (FPCA)</h3>
+<section id="assign-residuals-2" class="level4">
+<h4 class="anchored" data-anchor-id="assign-residuals-2">Assign residuals</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>dtaiA6 <span class="ot">&lt;-</span> <span class="fu">left_join</span>(dtai, </span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">drop_na</span>(dtai, mode, temp, humid) <span class="sc">|&gt;</span> </span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">mutate</span>(<span class="at">gam6res=</span>gam6<span class="sc">$</span>residuals), </span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">by=</span>var)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="step-2-fpca-2" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-fpca-2">Step: 2 FPCA</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># find days without any data (only NA's)</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>NAgeq24 <span class="ot">&lt;-</span> dtaiA6 <span class="sc">|&gt;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(gam6res, ind_day, ind_hour) <span class="sc">|&gt;</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(ind_day)<span class="sc">|&gt;</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="sc">-</span><span class="fu">c</span>(ind_hour), <span class="sc">~</span><span class="fu">sum</span>(<span class="fu">is.na</span>(.))<span class="sc">&gt;=</span><span class="dv">21</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(gam6res<span class="sc">==</span><span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>gam6res)</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>fpcaRes <span class="ot">&lt;-</span> <span class="fu">fpca.face</span>(</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">Y=</span>dtaiA6 <span class="sc">|&gt;</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(gam6res, ind_day, ind_hour) <span class="sc">|&gt;</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span>ind_day <span class="sc">%in%</span> NAgeq24<span class="sc">$</span>ind_day) <span class="sc">|&gt;</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_wider</span>(<span class="at">names_from=</span>ind_day, <span class="at">values_from=</span>gam6res) <span class="sc">|&gt;</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>ind_hour) <span class="sc">|&gt;</span></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.matrix</span>() <span class="sc">|&gt;</span></span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">t</span>(),</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">knots=</span><span class="dv">20</span>,</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">pve=</span>.<span class="dv">99</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="fpca-2" class="level4">
+<h4 class="anchored" data-anchor-id="fpca-2">FPCA</h4>
+</section>
+<section id="prepare-for-refit-with-functional-random-effects-2" class="level4">
+<h4 class="anchored" data-anchor-id="prepare-for-refit-with-functional-random-effects-2">Prepare for refit with functional random effects</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>dtaiB6 <span class="ot">&lt;-</span> <span class="fu">left_join</span>(</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  dtai, dtaiA6 <span class="sc">|&gt;</span> <span class="fu">mutate</span>(</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    fpcaRes<span class="sc">$</span>efunctions <span class="sc">|&gt;</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>() <span class="sc">|&gt;</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">slice</span>(<span class="fu">rep</span>(<span class="fu">row_number</span>(), nd)) <span class="sc">|&gt;</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'colnames&lt;-'</span> (<span class="fu">sprintf</span>(<span class="st">"ef%02d"</span>, <span class="dv">1</span><span class="sc">:</span>fpcaRes<span class="sc">$</span>npc)))</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  , <span class="at">by=</span>var) <span class="sc">|&gt;</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">ind_dayf=</span><span class="fu">factor</span>(ind_day))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="step-3-refitted-model-2" class="level3">
+<h3 class="anchored" data-anchor-id="step-3-refitted-model-2">Step: 3 Refitted model</h3>
+<section id="refit-with-functional-random-effects-lme4-and-mgcv-2" class="level4">
+<h4 class="anchored" data-anchor-id="refit-with-functional-random-effects-lme4-and-mgcv-2">Refit with functional random effects (lme4 and mgcv)</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>eq <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"mode~"</span>, </span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>             <span class="st">"te("</span>, <span class="st">"td01, ind_day"</span>, <span class="st">",bs = 'cc')"</span>, <span class="st">"+"</span>, </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>             <span class="st">"s("</span>, <span class="st">"temp"</span>, <span class="st">", bs = 'cr')"</span>, <span class="st">"+"</span>, </span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>             <span class="st">"s("</span>, <span class="st">"humid"</span>, <span class="st">", bs = 'cr')"</span>)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>re <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"~"</span>, <span class="fu">paste</span>((<span class="fu">sprintf</span>(<span class="st">"ef%02d"</span>, <span class="dv">1</span><span class="sc">:</span>fpcaRes<span class="sc">$</span>npc)), <span class="at">collapse=</span><span class="st">"+"</span>), <span class="st">"-1"</span>)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>gam6d <span class="ot">&lt;-</span> <span class="fu">gamm</span>(<span class="fu">as.formula</span>(eq), <span class="at">data=</span>dtaiB6, <span class="at">random=</span><span class="fu">list</span>(<span class="at">ind_dayf=</span><span class="fu">pdDiag</span>(<span class="fu">as.formula</span>(re))), </span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>              <span class="at">control=</span><span class="fu">list</span>(<span class="at">msMaxIter=</span><span class="dv">100</span>, <span class="at">msMaxEval=</span><span class="dv">1000</span>), <span class="at">method=</span><span class="st">"ML"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="compute-r2-for-fixed-effect-model-2" class="level4">
+<h4 class="anchored" data-anchor-id="compute-r2-for-fixed-effect-model-2">Compute R2 for fixed effect model</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>dtaiC6 <span class="ot">&lt;-</span> <span class="fu">right_join</span>(dtaiB6, <span class="fu">drop_na</span>(dtai, mode, temp, humid) <span class="sc">|&gt;</span> </span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">mutate</span>(<span class="at">fitted_values=</span>gam6d<span class="sc">$</span>gam<span class="sc">$</span>fitted.values), <span class="at">by=</span>var)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>dtaiD6 <span class="ot">&lt;-</span> dtaiC6 <span class="sc">|&gt;</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(date.x, ind_day, ind_hour, fitted_values, mode) <span class="sc">|&gt;</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">nominator=</span>(mode<span class="sc">-</span>fitted_values)<span class="sc">^</span><span class="dv">2</span>, <span class="at">denominator=</span>(mode<span class="sc">-</span><span class="fu">mean</span>(mode))<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>R2gam6d <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">-</span>(<span class="fu">sum</span>(dtaiD6<span class="sc">$</span>nominator)<span class="sc">/</span><span class="fu">sum</span>(dtaiD6<span class="sc">$</span>denominator))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="save-data-2" class="level3">
+<h3 class="anchored" data-anchor-id="save-data-2">Save data</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(gam6d, <span class="at">file=</span><span class="st">"data/mode06_gam6d.RDS"</span>)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(dtaiB6, <span class="at">file=</span><span class="st">"data/mode06_dtaiB6.RDS"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="temperature-and-relative-humidity-effect-interaction-plus-varying-daily-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="temperature-and-relative-humidity-effect-interaction-plus-varying-daily-pattern">Temperature and relative humidity effect (interaction) plus varying daily pattern</h2>
+<section id="step-1-initial-model-3" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-initial-model-3">Step: 1 Initial model</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>gam7 <span class="ot">&lt;-</span> <span class="fu">gam</span>(mode <span class="sc">~</span>  <span class="fu">te</span>(td01, ind_day, <span class="at">bs=</span><span class="st">"cc"</span>) <span class="sc">+</span> <span class="fu">te</span>(temp, humid, <span class="at">bs=</span><span class="st">"cr"</span>), </span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">data=</span>dtai, <span class="at">method=</span><span class="st">"GCV.Cp"</span>, <span class="at">control=</span><span class="fu">list</span>(<span class="at">nthreads=</span>nc))</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(gam7)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Family: gaussian 
+Link function: identity 
+
+Formula:
+mode ~ te(td01, ind_day, bs = "cc") + te(temp, humid, bs = "cr")
+
+Parametric coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 2.924e+00  9.409e-05   31075   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Approximate significance of smooth terms:
+                   edf Ref.df      F p-value    
+te(td01,ind_day) 10.14  15.00  3.988  &lt;2e-16 ***
+te(temp,humid)   16.21  18.03 89.822  &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+R-sq.(adj) =  0.548   Deviance explained = 55.3%
+GCV = 2.0324e-05  Scale est. = 2.0078e-05  n = 2268</code></pre>
+</div>
+</div>
+</section>
+<section id="structural-component-w-fpca-3" class="level3">
+<h3 class="anchored" data-anchor-id="structural-component-w-fpca-3">Structural component <span class="math inline">\(w\)</span> (FPCA)</h3>
+<section id="assign-residuals-3" class="level4">
+<h4 class="anchored" data-anchor-id="assign-residuals-3">Assign residuals</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>dtaiA7 <span class="ot">&lt;-</span> <span class="fu">left_join</span>(dtai, </span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">drop_na</span>(dtai, mode, temp, humid) <span class="sc">|&gt;</span> </span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">mutate</span>(<span class="at">gam7res=</span>gam7<span class="sc">$</span>residuals), </span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">by=</span>var)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="step-2-fpca-3" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-fpca-3">Step: 2 FPCA</h3>
+<section id="fpca-3" class="level4">
+<h4 class="anchored" data-anchor-id="fpca-3">FPCA</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># find days without any data (only NA's)</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>NAgeq24 <span class="ot">&lt;-</span> dtaiA7 <span class="sc">|&gt;</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(gam7res, ind_day, ind_hour) <span class="sc">|&gt;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(ind_day)<span class="sc">|&gt;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="sc">-</span><span class="fu">c</span>(ind_hour), <span class="sc">~</span><span class="fu">sum</span>(<span class="fu">is.na</span>(.))<span class="sc">&gt;=</span><span class="dv">21</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(gam7res<span class="sc">==</span><span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>gam7res)</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>fpcaRes <span class="ot">&lt;-</span> <span class="fu">fpca.face</span>(</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">Y=</span>dtaiA7 <span class="sc">|&gt;</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(gam7res, ind_day, ind_hour) <span class="sc">|&gt;</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span>ind_day <span class="sc">%in%</span> NAgeq24<span class="sc">$</span>ind_day) <span class="sc">|&gt;</span></span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_wider</span>(<span class="at">names_from=</span>ind_day, <span class="at">values_from=</span>gam7res) <span class="sc">|&gt;</span></span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>ind_hour) <span class="sc">|&gt;</span></span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.matrix</span>() <span class="sc">|&gt;</span></span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">t</span>(),</span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">knots=</span><span class="dv">20</span>,</span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">pve=</span>.<span class="dv">99</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="prepare-for-refit-with-functional-random-effects-3" class="level4">
+<h4 class="anchored" data-anchor-id="prepare-for-refit-with-functional-random-effects-3">Prepare for refit with functional random effects</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>dtaiB7 <span class="ot">&lt;-</span> <span class="fu">left_join</span>(</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  dtai, dtaiA7 <span class="sc">|&gt;</span> <span class="fu">mutate</span>(</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    fpcaRes<span class="sc">$</span>efunctions <span class="sc">|&gt;</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>() <span class="sc">|&gt;</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">slice</span>(<span class="fu">rep</span>(<span class="fu">row_number</span>(), nd)) <span class="sc">|&gt;</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'colnames&lt;-'</span> (<span class="fu">sprintf</span>(<span class="st">"ef%02d"</span>, <span class="dv">1</span><span class="sc">:</span>fpcaRes<span class="sc">$</span>npc)))</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>  , <span class="at">by=</span>var) <span class="sc">|&gt;</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">ind_dayf=</span><span class="fu">factor</span>(ind_day))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="step-3-refitted-model-3" class="level3">
+<h3 class="anchored" data-anchor-id="step-3-refitted-model-3">Step: 3 Refitted model</h3>
+<section id="refit-with-functional-random-effects-lme4-and-mgcv-3" class="level4">
+<h4 class="anchored" data-anchor-id="refit-with-functional-random-effects-lme4-and-mgcv-3">Refit with functional random effects (lme4 and mgcv)</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>eq <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"mode~"</span>, </span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>             <span class="st">"te("</span>, <span class="st">"td01, ind_day"</span>, <span class="st">",bs = 'cc')"</span>, <span class="st">"+"</span>, </span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>             <span class="st">"te("</span>, <span class="st">"temp, humid"</span>, <span class="st">", bs = 'cr')"</span>)</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>re <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"~"</span>, <span class="fu">paste</span>((<span class="fu">sprintf</span>(<span class="st">"ef%02d"</span>, <span class="dv">1</span><span class="sc">:</span>fpcaRes<span class="sc">$</span>npc)), <span class="at">collapse=</span><span class="st">"+"</span>), <span class="st">"-1"</span>)</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>gam7d <span class="ot">&lt;-</span> <span class="fu">gamm</span>(<span class="fu">as.formula</span>(eq), <span class="at">data=</span>dtaiB7, <span class="at">random=</span><span class="fu">list</span>(<span class="at">ind_dayf=</span><span class="fu">pdDiag</span>(<span class="fu">as.formula</span>(re))), </span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>              <span class="at">method=</span><span class="st">"ML"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>dtaiC7 <span class="ot">&lt;-</span> <span class="fu">right_join</span>(dtaiB7, <span class="fu">drop_na</span>(dtai, mode, temp, humid) <span class="sc">|&gt;</span> </span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">mutate</span>(<span class="at">fitted_values=</span>gam7d<span class="sc">$</span>gam<span class="sc">$</span>fitted.values), <span class="at">by=</span>var)</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>dtaiD7 <span class="ot">&lt;-</span> dtaiC7 <span class="sc">|&gt;</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(date.x, ind_day, ind_hour, fitted_values, mode) <span class="sc">|&gt;</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">nominator=</span>(mode<span class="sc">-</span>fitted_values)<span class="sc">^</span><span class="dv">2</span>, <span class="at">denominator=</span>(mode<span class="sc">-</span><span class="fu">mean</span>(mode))<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>R2gam7d <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">-</span>(<span class="fu">sum</span>(dtaiD7<span class="sc">$</span>nominator)<span class="sc">/</span><span class="fu">sum</span>(dtaiD7<span class="sc">$</span>denominator))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="save-data-3" class="level3">
+<h3 class="anchored" data-anchor-id="save-data-3">Save data</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(fpcaRes, <span class="st">"data/mode06_gam7_fpcaRes.RDS"</span>)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(gam7d, <span class="at">file=</span><span class="st">"data/mode06_gam7d.RDS"</span>)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(dtaiB7, <span class="at">file=</span><span class="st">"data/mode06_dtaiB7.RDS"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>xtable<span class="sc">::</span><span class="fu">xtable</span>(</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rbind</span>(</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(R2gam2d, R2gam4d, R2gam6d, R2gam7d),</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(<span class="fu">round</span>(<span class="fu">nrow</span>(dtaiD2)<span class="sc">/</span><span class="dv">24</span>, <span class="dv">2</span>), <span class="fu">round</span>(<span class="fu">nrow</span>(dtaiD4)<span class="sc">/</span><span class="dv">24</span>, <span class="dv">2</span>), </span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">round</span>(<span class="fu">nrow</span>(dtaiD6)<span class="sc">/</span><span class="dv">24</span>, <span class="dv">2</span>), <span class="fu">round</span>(<span class="fu">nrow</span>(dtaiD7)<span class="sc">/</span><span class="dv">24</span>, <span class="dv">2</span>)),</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(<span class="fu">nrow</span>(dtaiD2), <span class="fu">nrow</span>(dtaiD4), <span class="fu">nrow</span>(dtaiD6), <span class="fu">nrow</span>(dtaiD7))</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>% latex table generated in R 4.3.1 by xtable 1.8-4 package
+% Tue Oct 15 14:13:16 2024
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ &amp; R2gam2d &amp; R2gam4d &amp; R2gam6d &amp; R2gam7d \\ 
+  \hline
+1 &amp; 0.43 &amp; 0.25 &amp; 0.52 &amp; 0.54 \\ 
+  2 &amp; 142.12 &amp; 187.00 &amp; 94.50 &amp; 94.50 \\ 
+  3 &amp; 3411.00 &amp; 4488.00 &amp; 2268.00 &amp; 2268.00 \\ 
+   \hline
+\end{tabular}
+\end{table}</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="computational-and-session-information" class="level2">
+<h2 class="anchored" data-anchor-id="computational-and-session-information">Computational and session information</h2>
+<p>Hardware information:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_cpu</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$vendor_id
+[1] "GenuineIntel"
+
+$model_name
+[1] "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz"
+
+$no_of_cores
+[1] 8</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_ram</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>16.4 GB</code></pre>
+</div>
+</div>
+<p>Computation time:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(<span class="st">"Computation time:"</span>, <span class="fu">round</span>(<span class="fu">Sys.time</span>() <span class="sc">-</span> start_time, <span class="dv">2</span>)[[<span class="dv">1</span>]], <span class="st">"seconds"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Computation time: 12.62 seconds"</code></pre>
+</div>
+</div>
+<p>Session information:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.3.1 (2023-06-16)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Debian GNU/Linux 11 (bullseye)
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.13.so;  LAPACK version 3.9.0
+
+locale:
+ [1] LC_CTYPE=en_GB.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_GB.UTF-8        LC_COLLATE=en_GB.UTF-8    
+ [5] LC_MONETARY=en_GB.UTF-8    LC_MESSAGES=en_GB.UTF-8   
+ [7] LC_PAPER=en_GB.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_GB.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Europe/Berlin
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] xtable_1.8-4      tidyr_1.1.2       refund_0.1-30     gratia_0.8.1     
+ [5] gamm4_0.2-6       mgcv_1.8-42       nlme_3.1-162      lme4_1.1-33      
+ [9] Matrix_1.5-3      dplyr_1.1.2       benchmarkme_1.0.8
+
+loaded via a namespace (and not attached):
+ [1] benchmarkmeData_1.0.4 gtable_0.3.4          xfun_0.43            
+ [4] ggplot2_3.5.1         htmlwidgets_1.6.4     ks_1.14.0            
+ [7] lattice_0.20-45       bitops_1.0-6          vctrs_0.6.5          
+[10] tools_4.3.1           generics_0.1.3        parallel_4.3.1       
+[13] tibble_3.2.1          fansi_1.0.6           cluster_2.1.4        
+[16] pkgconfig_2.0.3       fds_1.8               KernSmooth_2.23-20   
+[19] lifecycle_1.0.4       compiler_4.3.1        stringr_1.4.0        
+[22] grpreg_3.4.0          munsell_0.5.1         codetools_0.2-19     
+[25] htmltools_0.5.8.1     rainbow_3.7           RCurl_1.98-1.12      
+[28] yaml_2.3.8            pracma_2.4.2          pillar_1.9.0         
+[31] nloptr_1.2.2.2        ellipsis_0.3.2        pbs_1.1              
+[34] MASS_7.3-58.3         iterators_1.0.13      abind_1.4-5          
+[37] boot_1.3-28.1         mclust_6.0.0          foreach_1.5.1        
+[40] tidyselect_1.2.0      digest_0.6.35         mvtnorm_1.1-3        
+[43] stringi_1.5.3         purrr_1.0.2           magic_1.6-1          
+[46] splines_4.3.1         pcaPP_2.0-3           fastmap_1.1.1        
+[49] grid_4.3.1            colorspace_2.1-0      RLRsim_3.1-8         
+[52] cli_3.6.2             magrittr_2.0.3        patchwork_1.2.0.9000 
+[55] utf8_1.2.4            withr_3.0.0           scales_1.3.0         
+[58] rmarkdown_2.26        httr_1.4.7            deSolve_1.35         
+[61] mvnfast_0.2.8         evaluate_0.23         knitr_1.45           
+[64] doParallel_1.0.17     rlang_1.1.3           Rcpp_1.0.12          
+[67] glue_1.7.0            fda_6.0.5             hdrcde_3.4           
+[70] rstudioapi_0.13       minqa_1.2.4           jsonlite_1.8.8       
+[73] R6_2.5.1             </code></pre>
+</div>
+</div>
+<!-- -->
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" id="quarto-reuse"><h2 class="anchored quarto-appendix-heading">Reuse</h2><div class="quarto-appendix-contents"><div><a rel="license" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></div></div></section><section class="quarto-appendix-contents" id="quarto-citation"><h2 class="anchored quarto-appendix-heading">Citation</h2><div><div class="quarto-appendix-secondary-label">BibTeX citation:</div><pre class="sourceCode code-with-copy quarto-appendix-bibtex"><code class="sourceCode bibtex">@online{wittenberg2024,
+  author = {Wittenberg, Philipp and Neumann, Lizzie and Mendler,
+    Alexander and Gertheiss, Jan},
+  title = {Covariate-Adjusted {Functional} {Data} {Analysis} for
+    {Structural} {Health} {Monitoring}},
+  date = {2024-10-07},
+  doi = {10.48550/arXiv.2408.02106},
+  langid = {en}
+}
+</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre><div class="quarto-appendix-secondary-label">For attribution, please cite this work as:</div><div id="ref-wittenberg2024" class="csl-entry quarto-appendix-citeas" role="listitem">
+Wittenberg, Philipp, Lizzie Neumann, Alexander Mendler, and Jan
+Gertheiss. 2024. <span>“Covariate-Adjusted Functional Data Analysis for
+Structural Health Monitoring.”</span> arXiv:2408.02106. October 7, 2024.
+<a href="https://doi.org/10.48550/arXiv.2408.02106">https://doi.org/10.48550/arXiv.2408.02106</a>.
+</div></div></section></div></main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb50" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Covariate-Adjusted Functional Data Analysis for Structural Health Monitoring"</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "KW51: Mode 06 computing results"</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Freeze computed outputs</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a><span class="an">freeze:</span><span class="co"> true</span></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable banner style title blocks</span></span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a><span class="an">title-block-banner:</span><span class="co"> true</span></span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable CC licence appendix</span></span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a><span class="an">license:</span><span class="co"> "CC BY"</span></span>
+<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Default for table of contents</span></span>
+<span id="cb50-15"><a href="#cb50-15" aria-hidden="true" tabindex="-1"></a><span class="an">toc:</span><span class="co"> true</span></span>
+<span id="cb50-16"><a href="#cb50-16" aria-hidden="true" tabindex="-1"></a><span class="an">toc-title:</span><span class="co"> Table of contents</span></span>
+<span id="cb50-17"><a href="#cb50-17" aria-hidden="true" tabindex="-1"></a><span class="an">toc-location:</span><span class="co"> left</span></span>
+<span id="cb50-18"><a href="#cb50-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-19"><a href="#cb50-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Default knitr options</span></span>
+<span id="cb50-20"><a href="#cb50-20" aria-hidden="true" tabindex="-1"></a><span class="an">execute:</span></span>
+<span id="cb50-21"><a href="#cb50-21" aria-hidden="true" tabindex="-1"></a><span class="co">  echo: true</span></span>
+<span id="cb50-22"><a href="#cb50-22" aria-hidden="true" tabindex="-1"></a><span class="co">  message: true</span></span>
+<span id="cb50-23"><a href="#cb50-23" aria-hidden="true" tabindex="-1"></a><span class="co">  warning: true</span></span>
+<span id="cb50-24"><a href="#cb50-24" aria-hidden="true" tabindex="-1"></a><span class="an">cache:</span><span class="co"> false</span></span>
+<span id="cb50-25"><a href="#cb50-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-26"><a href="#cb50-26" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "10/07/2024" </span></span>
+<span id="cb50-27"><a href="#cb50-27" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
+<span id="cb50-28"><a href="#cb50-28" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
+<span id="cb50-29"><a href="#cb50-29" aria-hidden="true" tabindex="-1"></a><span class="co">    embed-resources: false</span></span>
+<span id="cb50-30"><a href="#cb50-30" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: false</span></span>
+<span id="cb50-31"><a href="#cb50-31" aria-hidden="true" tabindex="-1"></a><span class="co">    code-summary: "Code"</span></span>
+<span id="cb50-32"><a href="#cb50-32" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools:</span></span>
+<span id="cb50-33"><a href="#cb50-33" aria-hidden="true" tabindex="-1"></a><span class="co">      source: true</span></span>
+<span id="cb50-34"><a href="#cb50-34" aria-hidden="true" tabindex="-1"></a><span class="co">      toggle: true</span></span>
+<span id="cb50-35"><a href="#cb50-35" aria-hidden="true" tabindex="-1"></a><span class="co">      caption: none</span></span>
+<span id="cb50-36"><a href="#cb50-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-37"><a href="#cb50-37" aria-hidden="true" tabindex="-1"></a><span class="an">knitr:</span></span>
+<span id="cb50-38"><a href="#cb50-38" aria-hidden="true" tabindex="-1"></a><span class="co">  opts_chunk:</span></span>
+<span id="cb50-39"><a href="#cb50-39" aria-hidden="true" tabindex="-1"></a><span class="co">    dev:</span></span>
+<span id="cb50-40"><a href="#cb50-40" aria-hidden="true" tabindex="-1"></a><span class="co">      - png</span></span>
+<span id="cb50-41"><a href="#cb50-41" aria-hidden="true" tabindex="-1"></a><span class="co">      - pdf</span></span>
+<span id="cb50-42"><a href="#cb50-42" aria-hidden="true" tabindex="-1"></a><span class="co">      </span></span>
+<span id="cb50-43"><a href="#cb50-43" aria-hidden="true" tabindex="-1"></a><span class="an">editor:</span><span class="co"> source</span></span>
+<span id="cb50-44"><a href="#cb50-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-45"><a href="#cb50-45" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span></span>
+<span id="cb50-46"><a href="#cb50-46" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Philipp Wittenberg</span></span>
+<span id="cb50-47"><a href="#cb50-47" aria-hidden="true" tabindex="-1"></a><span class="co">    corresponding: true</span></span>
+<span id="cb50-48"><a href="#cb50-48" aria-hidden="true" tabindex="-1"></a><span class="co">    id: pw</span></span>
+<span id="cb50-49"><a href="#cb50-49" aria-hidden="true" tabindex="-1"></a><span class="co">    orcid: 0000-0001-7151-8243</span></span>
+<span id="cb50-50"><a href="#cb50-50" aria-hidden="true" tabindex="-1"></a><span class="co">    email: pwitten@hsu-hh.de</span></span>
+<span id="cb50-51"><a href="#cb50-51" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: </span></span>
+<span id="cb50-52"><a href="#cb50-52" aria-hidden="true" tabindex="-1"></a><span class="co">      - name: Helmut Schmidt University</span></span>
+<span id="cb50-53"><a href="#cb50-53" aria-hidden="true" tabindex="-1"></a><span class="co">        city: Hamburg</span></span>
+<span id="cb50-54"><a href="#cb50-54" aria-hidden="true" tabindex="-1"></a><span class="co">        country: Germany</span></span>
+<span id="cb50-55"><a href="#cb50-55" aria-hidden="true" tabindex="-1"></a><span class="co">        url: www.hsu-hh.de</span></span>
+<span id="cb50-56"><a href="#cb50-56" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Lizzie Neumann</span></span>
+<span id="cb50-57"><a href="#cb50-57" aria-hidden="true" tabindex="-1"></a><span class="co">    id: ln</span></span>
+<span id="cb50-58"><a href="#cb50-58" aria-hidden="true" tabindex="-1"></a><span class="co">    orcid: 0000-0003-2256-1127</span></span>
+<span id="cb50-59"><a href="#cb50-59" aria-hidden="true" tabindex="-1"></a><span class="co">    email: neumannl@hsu-hh.de</span></span>
+<span id="cb50-60"><a href="#cb50-60" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: </span></span>
+<span id="cb50-61"><a href="#cb50-61" aria-hidden="true" tabindex="-1"></a><span class="co">      - name: Helmut Schmidt University</span></span>
+<span id="cb50-62"><a href="#cb50-62" aria-hidden="true" tabindex="-1"></a><span class="co">        city: Hamburg</span></span>
+<span id="cb50-63"><a href="#cb50-63" aria-hidden="true" tabindex="-1"></a><span class="co">        country: Germany</span></span>
+<span id="cb50-64"><a href="#cb50-64" aria-hidden="true" tabindex="-1"></a><span class="co">        url: www.hsu-hh.de</span></span>
+<span id="cb50-65"><a href="#cb50-65" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Alexander Mendler</span></span>
+<span id="cb50-66"><a href="#cb50-66" aria-hidden="true" tabindex="-1"></a><span class="co">    id: ln</span></span>
+<span id="cb50-67"><a href="#cb50-67" aria-hidden="true" tabindex="-1"></a><span class="co">    orcid: 0000-0002-7492-6194</span></span>
+<span id="cb50-68"><a href="#cb50-68" aria-hidden="true" tabindex="-1"></a><span class="co">    email: alexander.mendler@tum.de</span></span>
+<span id="cb50-69"><a href="#cb50-69" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: </span></span>
+<span id="cb50-70"><a href="#cb50-70" aria-hidden="true" tabindex="-1"></a><span class="co">      - name: Technical University of Munich</span></span>
+<span id="cb50-71"><a href="#cb50-71" aria-hidden="true" tabindex="-1"></a><span class="co">        city: Hamburg</span></span>
+<span id="cb50-72"><a href="#cb50-72" aria-hidden="true" tabindex="-1"></a><span class="co">        country: Germany</span></span>
+<span id="cb50-73"><a href="#cb50-73" aria-hidden="true" tabindex="-1"></a><span class="co">        url: www.hsu-hh.de</span></span>
+<span id="cb50-74"><a href="#cb50-74" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Jan Gertheiss</span></span>
+<span id="cb50-75"><a href="#cb50-75" aria-hidden="true" tabindex="-1"></a><span class="co">    id: jg</span></span>
+<span id="cb50-76"><a href="#cb50-76" aria-hidden="true" tabindex="-1"></a><span class="co">    orcid: 0000-0001-6777-4746</span></span>
+<span id="cb50-77"><a href="#cb50-77" aria-hidden="true" tabindex="-1"></a><span class="co">    email: gertheij@hsu-hh.de</span></span>
+<span id="cb50-78"><a href="#cb50-78" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: </span></span>
+<span id="cb50-79"><a href="#cb50-79" aria-hidden="true" tabindex="-1"></a><span class="co">      - name: Helmut Schmidt University</span></span>
+<span id="cb50-80"><a href="#cb50-80" aria-hidden="true" tabindex="-1"></a><span class="co">        city: Hamburg</span></span>
+<span id="cb50-81"><a href="#cb50-81" aria-hidden="true" tabindex="-1"></a><span class="co">        country: Germany</span></span>
+<span id="cb50-82"><a href="#cb50-82" aria-hidden="true" tabindex="-1"></a><span class="co">        url: www.hsu-hh.de        </span></span>
+<span id="cb50-83"><a href="#cb50-83" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
+<span id="cb50-84"><a href="#cb50-84" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
+<span id="cb50-85"><a href="#cb50-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-86"><a href="#cb50-86" aria-hidden="true" tabindex="-1"></a><span class="an">citation:</span><span class="co"> </span></span>
+<span id="cb50-87"><a href="#cb50-87" aria-hidden="true" tabindex="-1"></a><span class="co">  container-title: arXiv:2408.02106</span></span>
+<span id="cb50-88"><a href="#cb50-88" aria-hidden="true" tabindex="-1"></a><span class="co">  doi: 10.48550/arXiv.2408.02106</span></span>
+<span id="cb50-89"><a href="#cb50-89" aria-hidden="true" tabindex="-1"></a><span class="co">  </span></span>
+<span id="cb50-90"><a href="#cb50-90" aria-hidden="true" tabindex="-1"></a><span class="an">bibliography:</span></span>
+<span id="cb50-91"><a href="#cb50-91" aria-hidden="true" tabindex="-1"></a><span class="co">  - literature.bib</span></span>
+<span id="cb50-92"><a href="#cb50-92" aria-hidden="true" tabindex="-1"></a><span class="an">link-citations:</span><span class="co"> true</span></span>
+<span id="cb50-93"><a href="#cb50-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-94"><a href="#cb50-94" aria-hidden="true" tabindex="-1"></a><span class="an">output:</span><span class="co"> github_document</span></span>
+<span id="cb50-95"><a href="#cb50-95" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb50-96"><a href="#cb50-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-99"><a href="#cb50-99" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb50-100"><a href="#cb50-100" aria-hidden="true" tabindex="-1"></a>start_time <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>()</span>
+<span id="cb50-101"><a href="#cb50-101" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-102"><a href="#cb50-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-103"><a href="#cb50-103" aria-hidden="true" tabindex="-1"></a>Load libraries</span>
+<span id="cb50-104"><a href="#cb50-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-105"><a href="#cb50-105" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, message=FALSE}</span></span>
+<span id="cb50-106"><a href="#cb50-106" aria-hidden="true" tabindex="-1"></a><span class="in"># Package names</span></span>
+<span id="cb50-107"><a href="#cb50-107" aria-hidden="true" tabindex="-1"></a><span class="in">packages &lt;- c("benchmarkme", "dplyr", "gamm4", "gratia", "mgcv", "refund", </span></span>
+<span id="cb50-108"><a href="#cb50-108" aria-hidden="true" tabindex="-1"></a><span class="in">              "tidyr", "xtable")</span></span>
+<span id="cb50-109"><a href="#cb50-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-110"><a href="#cb50-110" aria-hidden="true" tabindex="-1"></a><span class="in"># Install packages not yet installed</span></span>
+<span id="cb50-111"><a href="#cb50-111" aria-hidden="true" tabindex="-1"></a><span class="in">installed_packages &lt;- packages %in% rownames(installed.packages())</span></span>
+<span id="cb50-112"><a href="#cb50-112" aria-hidden="true" tabindex="-1"></a><span class="in">if (any(installed_packages == FALSE)) {</span></span>
+<span id="cb50-113"><a href="#cb50-113" aria-hidden="true" tabindex="-1"></a><span class="in">  install.packages(packages[!installed_packages])</span></span>
+<span id="cb50-114"><a href="#cb50-114" aria-hidden="true" tabindex="-1"></a><span class="in">}</span></span>
+<span id="cb50-115"><a href="#cb50-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-116"><a href="#cb50-116" aria-hidden="true" tabindex="-1"></a><span class="in"># Packages loading</span></span>
+<span id="cb50-117"><a href="#cb50-117" aria-hidden="true" tabindex="-1"></a><span class="in">invisible(lapply(packages, library, character.only = TRUE))</span></span>
+<span id="cb50-118"><a href="#cb50-118" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-119"><a href="#cb50-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-120"><a href="#cb50-120" aria-hidden="true" tabindex="-1"></a><span class="in">```{r load_data}</span></span>
+<span id="cb50-121"><a href="#cb50-121" aria-hidden="true" tabindex="-1"></a><span class="in">dta  &lt;- readRDS("data/Dataset_bridge_KW51.RDS")</span></span>
+<span id="cb50-122"><a href="#cb50-122" aria-hidden="true" tabindex="-1"></a><span class="in">var  &lt;- c("temp", "mode", "ind_day", "ind_hour", "td01", "humid")</span></span>
+<span id="cb50-123"><a href="#cb50-123" aria-hidden="true" tabindex="-1"></a><span class="in">nc   &lt;- 8</span></span>
+<span id="cb50-124"><a href="#cb50-124" aria-hidden="true" tabindex="-1"></a><span class="in">dta0 &lt;- filter(dta, intervention==0) |&gt; rename(temp=tBD31A, humid=rhBD31A)</span></span>
+<span id="cb50-125"><a href="#cb50-125" aria-hidden="true" tabindex="-1"></a><span class="in">dta1 &lt;- filter(dta, intervention!=2) |&gt; rename(temp=tBD31A, humid=rhBD31A)</span></span>
+<span id="cb50-126"><a href="#cb50-126" aria-hidden="true" tabindex="-1"></a><span class="in">dta2 &lt;- dta |&gt; rename(temp=tBD31A, humid=rhBD31A)</span></span>
+<span id="cb50-127"><a href="#cb50-127" aria-hidden="true" tabindex="-1"></a><span class="in">M &lt;- (sprintf("Mode_%02d", 1:14))</span></span>
+<span id="cb50-128"><a href="#cb50-128" aria-hidden="true" tabindex="-1"></a><span class="in">i &lt;- 06</span></span>
+<span id="cb50-129"><a href="#cb50-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-130"><a href="#cb50-130" aria-hidden="true" tabindex="-1"></a><span class="in">dtai &lt;- dta0 |&gt; </span></span>
+<span id="cb50-131"><a href="#cb50-131" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(td01, temp, humid, all_of(M), ind_day, ind_hour, date) |&gt; </span></span>
+<span id="cb50-132"><a href="#cb50-132" aria-hidden="true" tabindex="-1"></a><span class="in">  rename(mode=M[i]) |&gt;</span></span>
+<span id="cb50-133"><a href="#cb50-133" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(temp, humid, mode, ind_day, ind_hour, date) |&gt;</span></span>
+<span id="cb50-134"><a href="#cb50-134" aria-hidden="true" tabindex="-1"></a><span class="in">  group_by(ind_day) |&gt;</span></span>
+<span id="cb50-135"><a href="#cb50-135" aria-hidden="true" tabindex="-1"></a><span class="in">  filter(ind_day&lt;=200) |&gt;</span></span>
+<span id="cb50-136"><a href="#cb50-136" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(td01 = seq(.5, 23.5, 1)) |&gt;</span></span>
+<span id="cb50-137"><a href="#cb50-137" aria-hidden="true" tabindex="-1"></a><span class="in">  ungroup()</span></span>
+<span id="cb50-138"><a href="#cb50-138" aria-hidden="true" tabindex="-1"></a><span class="in">nd &lt;- dtai$ind_day |&gt; n_distinct()</span></span>
+<span id="cb50-139"><a href="#cb50-139" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-140"><a href="#cb50-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-141"><a href="#cb50-141" aria-hidden="true" tabindex="-1"></a><span class="in">```{r remove_outliers_natural_frequencies}</span></span>
+<span id="cb50-142"><a href="#cb50-142" aria-hidden="true" tabindex="-1"></a><span class="in">LIMITS &lt;- dtai |&gt;</span></span>
+<span id="cb50-143"><a href="#cb50-143" aria-hidden="true" tabindex="-1"></a><span class="in">  filter(ind_day&lt;=200) |&gt;</span></span>
+<span id="cb50-144"><a href="#cb50-144" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(mode) |&gt; </span></span>
+<span id="cb50-145"><a href="#cb50-145" aria-hidden="true" tabindex="-1"></a><span class="in">  summarise(mmean = mean(mode, na.rm=TRUE),</span></span>
+<span id="cb50-146"><a href="#cb50-146" aria-hidden="true" tabindex="-1"></a><span class="in">            msd   = sd(mode, na.rm=TRUE),</span></span>
+<span id="cb50-147"><a href="#cb50-147" aria-hidden="true" tabindex="-1"></a><span class="in">            upperLimit=mmean+3*msd,</span></span>
+<span id="cb50-148"><a href="#cb50-148" aria-hidden="true" tabindex="-1"></a><span class="in">            lowerLimit=mmean-3*msd) </span></span>
+<span id="cb50-149"><a href="#cb50-149" aria-hidden="true" tabindex="-1"></a><span class="in">dtai &lt;- dtai |&gt; </span></span>
+<span id="cb50-150"><a href="#cb50-150" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(mode=replace(mode, mode&gt;LIMITS$upperLimit &amp; ind_day%in%c(1:200), NA)) |&gt;</span></span>
+<span id="cb50-151"><a href="#cb50-151" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(mode=replace(mode, mode&lt;LIMITS$lowerLimit &amp; ind_day%in%c(1:200), NA))</span></span>
+<span id="cb50-152"><a href="#cb50-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-153"><a href="#cb50-153" aria-hidden="true" tabindex="-1"></a><span class="in">head(dtai)</span></span>
+<span id="cb50-154"><a href="#cb50-154" aria-hidden="true" tabindex="-1"></a><span class="in">tail(dtai)</span></span>
+<span id="cb50-155"><a href="#cb50-155" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-156"><a href="#cb50-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-157"><a href="#cb50-157" aria-hidden="true" tabindex="-1"></a><span class="fu">## Temperature effect plus recurring daily pattern</span></span>
+<span id="cb50-158"><a href="#cb50-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-159"><a href="#cb50-159" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step: 1 Initial model</span></span>
+<span id="cb50-160"><a href="#cb50-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-161"><a href="#cb50-161" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam2_fit_initial_model}</span></span>
+<span id="cb50-162"><a href="#cb50-162" aria-hidden="true" tabindex="-1"></a><span class="in">gam2 &lt;- gam(mode ~ s(td01, bs="cc") + s(temp, bs="cr"), data=dtai, </span></span>
+<span id="cb50-163"><a href="#cb50-163" aria-hidden="true" tabindex="-1"></a><span class="in">            method="GCV.Cp", control=list(nthreads=nc))</span></span>
+<span id="cb50-164"><a href="#cb50-164" aria-hidden="true" tabindex="-1"></a><span class="in">summary(gam2)</span></span>
+<span id="cb50-165"><a href="#cb50-165" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-166"><a href="#cb50-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-167"><a href="#cb50-167" aria-hidden="true" tabindex="-1"></a><span class="fu">### Structural component $w$ (FPCA)</span></span>
+<span id="cb50-168"><a href="#cb50-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-169"><a href="#cb50-169" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Assign residuals</span></span>
+<span id="cb50-170"><a href="#cb50-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-171"><a href="#cb50-171" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam2_assign_residuals}</span></span>
+<span id="cb50-172"><a href="#cb50-172" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiA2 &lt;- left_join(dtai, </span></span>
+<span id="cb50-173"><a href="#cb50-173" aria-hidden="true" tabindex="-1"></a><span class="in">                    drop_na(dtai, mode, temp) |&gt; mutate(gam2res=gam2$residuals), </span></span>
+<span id="cb50-174"><a href="#cb50-174" aria-hidden="true" tabindex="-1"></a><span class="in">                    by=var)</span></span>
+<span id="cb50-175"><a href="#cb50-175" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-176"><a href="#cb50-176" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-177"><a href="#cb50-177" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step: 2 FPCA</span></span>
+<span id="cb50-178"><a href="#cb50-178" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-179"><a href="#cb50-179" aria-hidden="true" tabindex="-1"></a><span class="fu">#### FPCA</span></span>
+<span id="cb50-180"><a href="#cb50-180" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-181"><a href="#cb50-181" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam2_FPCA}</span></span>
+<span id="cb50-182"><a href="#cb50-182" aria-hidden="true" tabindex="-1"></a><span class="in"># find days without any data (only NA's)</span></span>
+<span id="cb50-183"><a href="#cb50-183" aria-hidden="true" tabindex="-1"></a><span class="in">NAgeq24 &lt;- dtaiA2 |&gt;</span></span>
+<span id="cb50-184"><a href="#cb50-184" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(gam2res, ind_day, ind_hour) |&gt;</span></span>
+<span id="cb50-185"><a href="#cb50-185" aria-hidden="true" tabindex="-1"></a><span class="in">  group_by(ind_day)|&gt;</span></span>
+<span id="cb50-186"><a href="#cb50-186" aria-hidden="true" tabindex="-1"></a><span class="in">  summarise(across(-c(ind_hour), ~sum(is.na(.))&gt;=21)) |&gt;</span></span>
+<span id="cb50-187"><a href="#cb50-187" aria-hidden="true" tabindex="-1"></a><span class="in">  filter(gam2res==TRUE) |&gt;</span></span>
+<span id="cb50-188"><a href="#cb50-188" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(-gam2res)</span></span>
+<span id="cb50-189"><a href="#cb50-189" aria-hidden="true" tabindex="-1"></a><span class="in">  </span></span>
+<span id="cb50-190"><a href="#cb50-190" aria-hidden="true" tabindex="-1"></a><span class="in">fpcaRes &lt;- fpca.face(</span></span>
+<span id="cb50-191"><a href="#cb50-191" aria-hidden="true" tabindex="-1"></a><span class="in">  Y=dtaiA2 |&gt;</span></span>
+<span id="cb50-192"><a href="#cb50-192" aria-hidden="true" tabindex="-1"></a><span class="in">    dplyr::select(gam2res, ind_day, ind_hour) |&gt;</span></span>
+<span id="cb50-193"><a href="#cb50-193" aria-hidden="true" tabindex="-1"></a><span class="in">    filter(!ind_day %in% NAgeq24$ind_day) |&gt;</span></span>
+<span id="cb50-194"><a href="#cb50-194" aria-hidden="true" tabindex="-1"></a><span class="in">    pivot_wider(names_from=ind_day, values_from=gam2res) |&gt;</span></span>
+<span id="cb50-195"><a href="#cb50-195" aria-hidden="true" tabindex="-1"></a><span class="in">    dplyr::select(-ind_hour) |&gt;</span></span>
+<span id="cb50-196"><a href="#cb50-196" aria-hidden="true" tabindex="-1"></a><span class="in">    as.matrix() |&gt;</span></span>
+<span id="cb50-197"><a href="#cb50-197" aria-hidden="true" tabindex="-1"></a><span class="in">    t(),</span></span>
+<span id="cb50-198"><a href="#cb50-198" aria-hidden="true" tabindex="-1"></a><span class="in">  knots=20,</span></span>
+<span id="cb50-199"><a href="#cb50-199" aria-hidden="true" tabindex="-1"></a><span class="in">pve=.99)</span></span>
+<span id="cb50-200"><a href="#cb50-200" aria-hidden="true" tabindex="-1"></a><span class="in">saveRDS(fpcaRes, "data/mode06_gam2_fpcaRes.RDS")</span></span>
+<span id="cb50-201"><a href="#cb50-201" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-202"><a href="#cb50-202" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-203"><a href="#cb50-203" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Prepare for refit with functional random effects</span></span>
+<span id="cb50-204"><a href="#cb50-204" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-205"><a href="#cb50-205" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam2_include_pricipal_components}</span></span>
+<span id="cb50-206"><a href="#cb50-206" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiB2 &lt;- left_join(</span></span>
+<span id="cb50-207"><a href="#cb50-207" aria-hidden="true" tabindex="-1"></a><span class="in">  dtai, dtaiA2 |&gt; mutate(</span></span>
+<span id="cb50-208"><a href="#cb50-208" aria-hidden="true" tabindex="-1"></a><span class="in">    fpcaRes$efunctions |&gt;</span></span>
+<span id="cb50-209"><a href="#cb50-209" aria-hidden="true" tabindex="-1"></a><span class="in">    data.frame() |&gt;</span></span>
+<span id="cb50-210"><a href="#cb50-210" aria-hidden="true" tabindex="-1"></a><span class="in">    slice(rep(row_number(), nd)) |&gt;</span></span>
+<span id="cb50-211"><a href="#cb50-211" aria-hidden="true" tabindex="-1"></a><span class="in">    'colnames&lt;-' (sprintf("ef%02d", 1:fpcaRes$npc)))</span></span>
+<span id="cb50-212"><a href="#cb50-212" aria-hidden="true" tabindex="-1"></a><span class="in">  , by=var) |&gt;</span></span>
+<span id="cb50-213"><a href="#cb50-213" aria-hidden="true" tabindex="-1"></a><span class="in">   mutate(ind_dayf=factor(ind_day))</span></span>
+<span id="cb50-214"><a href="#cb50-214" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-215"><a href="#cb50-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-216"><a href="#cb50-216" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step: 3 Refitted model</span></span>
+<span id="cb50-217"><a href="#cb50-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-218"><a href="#cb50-218" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Refit with functional random effects (lme4 and mgcv)</span></span>
+<span id="cb50-219"><a href="#cb50-219" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-220"><a href="#cb50-220" aria-hidden="true" tabindex="-1"></a><span class="fu">#### lme and mgcv model estimation</span></span>
+<span id="cb50-221"><a href="#cb50-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-222"><a href="#cb50-222" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam2d_refit_model}</span></span>
+<span id="cb50-223"><a href="#cb50-223" aria-hidden="true" tabindex="-1"></a><span class="in">eq &lt;- paste0("mode~", "s(", "td01", ", bs = 'cc')", "+", "s(", "temp", ", bs = 'cr')")</span></span>
+<span id="cb50-224"><a href="#cb50-224" aria-hidden="true" tabindex="-1"></a><span class="in">re &lt;- paste0("~", paste((sprintf("ef%02d", 1:fpcaRes$npc)), collapse="+"), "-1")</span></span>
+<span id="cb50-225"><a href="#cb50-225" aria-hidden="true" tabindex="-1"></a><span class="in">gam2d &lt;- gamm(as.formula(eq), data=dtaiB2, random=list(ind_dayf=pdDiag(as.formula(re))), </span></span>
+<span id="cb50-226"><a href="#cb50-226" aria-hidden="true" tabindex="-1"></a><span class="in">              control=list(msMaxIter=100, msMaxEval=1000))</span></span>
+<span id="cb50-227"><a href="#cb50-227" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-228"><a href="#cb50-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-229"><a href="#cb50-229" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Compute R2 for fixed effect model</span></span>
+<span id="cb50-230"><a href="#cb50-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-231"><a href="#cb50-231" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam2d_R2}</span></span>
+<span id="cb50-232"><a href="#cb50-232" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiC2 &lt;- right_join(dtaiB2, drop_na(dtai, mode, temp) |&gt; </span></span>
+<span id="cb50-233"><a href="#cb50-233" aria-hidden="true" tabindex="-1"></a><span class="in">                      mutate(fitted_values=gam2d$gam$fitted.values), by=var)</span></span>
+<span id="cb50-234"><a href="#cb50-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-235"><a href="#cb50-235" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiD2 &lt;- dtaiC2 |&gt;</span></span>
+<span id="cb50-236"><a href="#cb50-236" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(date.x, ind_day, ind_hour, fitted_values, mode) |&gt;</span></span>
+<span id="cb50-237"><a href="#cb50-237" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(nominator=(mode-fitted_values)^2, denominator=(mode-mean(mode))^2)</span></span>
+<span id="cb50-238"><a href="#cb50-238" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-239"><a href="#cb50-239" aria-hidden="true" tabindex="-1"></a><span class="in">R2gam2d &lt;- 1-(sum(dtaiD2$nominator)/sum(dtaiD2$denominator))</span></span>
+<span id="cb50-240"><a href="#cb50-240" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-241"><a href="#cb50-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-242"><a href="#cb50-242" aria-hidden="true" tabindex="-1"></a><span class="fu">### Save data</span></span>
+<span id="cb50-243"><a href="#cb50-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-244"><a href="#cb50-244" aria-hidden="true" tabindex="-1"></a><span class="in">```{r save_data_objects_gam2d}</span></span>
+<span id="cb50-245"><a href="#cb50-245" aria-hidden="true" tabindex="-1"></a><span class="in">saveRDS(gam2d, file="data/mode06_gam2d.RDS")</span></span>
+<span id="cb50-246"><a href="#cb50-246" aria-hidden="true" tabindex="-1"></a><span class="in">saveRDS(dtaiB2, file="data/mode06_dtaiB2.RDS")</span></span>
+<span id="cb50-247"><a href="#cb50-247" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-248"><a href="#cb50-248" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-249"><a href="#cb50-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-250"><a href="#cb50-250" aria-hidden="true" tabindex="-1"></a><span class="fu">## Varying daily pattern</span></span>
+<span id="cb50-251"><a href="#cb50-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-252"><a href="#cb50-252" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step: 1 Initial model</span></span>
+<span id="cb50-253"><a href="#cb50-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-254"><a href="#cb50-254" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam4_fit_initial_model}</span></span>
+<span id="cb50-255"><a href="#cb50-255" aria-hidden="true" tabindex="-1"></a><span class="in">gam4 &lt;- gam(mode ~ te(td01, ind_day, bs="cc"), data=dtai, method="GCV.Cp", </span></span>
+<span id="cb50-256"><a href="#cb50-256" aria-hidden="true" tabindex="-1"></a><span class="in">            control=list(nthreads=nc))</span></span>
+<span id="cb50-257"><a href="#cb50-257" aria-hidden="true" tabindex="-1"></a><span class="in">summary(gam4)</span></span>
+<span id="cb50-258"><a href="#cb50-258" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-259"><a href="#cb50-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-260"><a href="#cb50-260" aria-hidden="true" tabindex="-1"></a><span class="fu">### Structural component $w$ (FPCA)</span></span>
+<span id="cb50-261"><a href="#cb50-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-262"><a href="#cb50-262" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Assign residuals</span></span>
+<span id="cb50-263"><a href="#cb50-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-264"><a href="#cb50-264" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam4_assign_residuals}</span></span>
+<span id="cb50-265"><a href="#cb50-265" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiA4 &lt;- left_join(dtai, </span></span>
+<span id="cb50-266"><a href="#cb50-266" aria-hidden="true" tabindex="-1"></a><span class="in">                    drop_na(dtai, mode) |&gt; mutate(gam4res=gam4$residuals), </span></span>
+<span id="cb50-267"><a href="#cb50-267" aria-hidden="true" tabindex="-1"></a><span class="in">                    by=var)</span></span>
+<span id="cb50-268"><a href="#cb50-268" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-269"><a href="#cb50-269" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-270"><a href="#cb50-270" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step: 2 FPCA</span></span>
+<span id="cb50-271"><a href="#cb50-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-272"><a href="#cb50-272" aria-hidden="true" tabindex="-1"></a><span class="fu">#### FPCA</span></span>
+<span id="cb50-273"><a href="#cb50-273" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-274"><a href="#cb50-274" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam4_FPCA}</span></span>
+<span id="cb50-275"><a href="#cb50-275" aria-hidden="true" tabindex="-1"></a><span class="in">NAgeq24 &lt;- dtaiA4 |&gt;</span></span>
+<span id="cb50-276"><a href="#cb50-276" aria-hidden="true" tabindex="-1"></a><span class="in">    dplyr::select(gam4res, ind_day, ind_hour) |&gt;</span></span>
+<span id="cb50-277"><a href="#cb50-277" aria-hidden="true" tabindex="-1"></a><span class="in">    group_by(ind_day)|&gt;</span></span>
+<span id="cb50-278"><a href="#cb50-278" aria-hidden="true" tabindex="-1"></a><span class="in">    summarise(across(-c(ind_hour), ~sum(is.na(.))&gt;=21)) |&gt;</span></span>
+<span id="cb50-279"><a href="#cb50-279" aria-hidden="true" tabindex="-1"></a><span class="in">    filter(gam4res==TRUE) |&gt;</span></span>
+<span id="cb50-280"><a href="#cb50-280" aria-hidden="true" tabindex="-1"></a><span class="in">    dplyr::select(-gam4res)</span></span>
+<span id="cb50-281"><a href="#cb50-281" aria-hidden="true" tabindex="-1"></a><span class="in">  </span></span>
+<span id="cb50-282"><a href="#cb50-282" aria-hidden="true" tabindex="-1"></a><span class="in">fpcaRes &lt;- fpca.face(</span></span>
+<span id="cb50-283"><a href="#cb50-283" aria-hidden="true" tabindex="-1"></a><span class="in">  Y=dtaiA4 |&gt;</span></span>
+<span id="cb50-284"><a href="#cb50-284" aria-hidden="true" tabindex="-1"></a><span class="in">      dplyr::select(gam4res, ind_day, ind_hour) |&gt;</span></span>
+<span id="cb50-285"><a href="#cb50-285" aria-hidden="true" tabindex="-1"></a><span class="in">      filter(!ind_day %in% NAgeq24$ind_day) |&gt;</span></span>
+<span id="cb50-286"><a href="#cb50-286" aria-hidden="true" tabindex="-1"></a><span class="in">      pivot_wider(names_from=ind_day, values_from=gam4res) |&gt;</span></span>
+<span id="cb50-287"><a href="#cb50-287" aria-hidden="true" tabindex="-1"></a><span class="in">      dplyr::select(-ind_hour) |&gt;</span></span>
+<span id="cb50-288"><a href="#cb50-288" aria-hidden="true" tabindex="-1"></a><span class="in">      as.matrix() |&gt;</span></span>
+<span id="cb50-289"><a href="#cb50-289" aria-hidden="true" tabindex="-1"></a><span class="in">      t(),</span></span>
+<span id="cb50-290"><a href="#cb50-290" aria-hidden="true" tabindex="-1"></a><span class="in">    knots=20,</span></span>
+<span id="cb50-291"><a href="#cb50-291" aria-hidden="true" tabindex="-1"></a><span class="in">  pve=.99)</span></span>
+<span id="cb50-292"><a href="#cb50-292" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-293"><a href="#cb50-293" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-294"><a href="#cb50-294" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Prepare for refit with functional random effects</span></span>
+<span id="cb50-295"><a href="#cb50-295" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-296"><a href="#cb50-296" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam4_include_pricipal_components}</span></span>
+<span id="cb50-297"><a href="#cb50-297" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiB4 &lt;- left_join(</span></span>
+<span id="cb50-298"><a href="#cb50-298" aria-hidden="true" tabindex="-1"></a><span class="in">  dtai, dtaiA4 |&gt; mutate(</span></span>
+<span id="cb50-299"><a href="#cb50-299" aria-hidden="true" tabindex="-1"></a><span class="in">    fpcaRes$efunctions |&gt;</span></span>
+<span id="cb50-300"><a href="#cb50-300" aria-hidden="true" tabindex="-1"></a><span class="in">    data.frame() |&gt;</span></span>
+<span id="cb50-301"><a href="#cb50-301" aria-hidden="true" tabindex="-1"></a><span class="in">    slice(rep(row_number(), nd)) |&gt;</span></span>
+<span id="cb50-302"><a href="#cb50-302" aria-hidden="true" tabindex="-1"></a><span class="in">    'colnames&lt;-' (sprintf("ef%02d", 1:fpcaRes$npc)))</span></span>
+<span id="cb50-303"><a href="#cb50-303" aria-hidden="true" tabindex="-1"></a><span class="in">  , by=var) |&gt;</span></span>
+<span id="cb50-304"><a href="#cb50-304" aria-hidden="true" tabindex="-1"></a><span class="in">   mutate(ind_dayf=factor(ind_day))</span></span>
+<span id="cb50-305"><a href="#cb50-305" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-306"><a href="#cb50-306" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-307"><a href="#cb50-307" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step: 3 Refitted model</span></span>
+<span id="cb50-308"><a href="#cb50-308" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-309"><a href="#cb50-309" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Refit with functional random effects (lme4 and mgcv)</span></span>
+<span id="cb50-310"><a href="#cb50-310" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-311"><a href="#cb50-311" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam4d_refit_model}</span></span>
+<span id="cb50-312"><a href="#cb50-312" aria-hidden="true" tabindex="-1"></a><span class="in">eq &lt;- paste0("mode~te(", "td01, ind_day", ",bs = 'cc')")</span></span>
+<span id="cb50-313"><a href="#cb50-313" aria-hidden="true" tabindex="-1"></a><span class="in">re &lt;- paste0("~", paste((sprintf("ef%02d", 1:fpcaRes$npc)), collapse="+"), "-1")</span></span>
+<span id="cb50-314"><a href="#cb50-314" aria-hidden="true" tabindex="-1"></a><span class="in">gam4d &lt;- gamm(as.formula(eq), data=dtaiB4, random=list(ind_dayf=pdDiag(as.formula(re))),</span></span>
+<span id="cb50-315"><a href="#cb50-315" aria-hidden="true" tabindex="-1"></a><span class="in">              control=list(msMaxIter=1000, msMaxEval=1000))</span></span>
+<span id="cb50-316"><a href="#cb50-316" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-317"><a href="#cb50-317" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-318"><a href="#cb50-318" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Compute R2 for fixed effect model</span></span>
+<span id="cb50-319"><a href="#cb50-319" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-320"><a href="#cb50-320" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam4d_R2}</span></span>
+<span id="cb50-321"><a href="#cb50-321" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiC4 &lt;- right_join(dtaiB4, drop_na(dtai, mode) |&gt; </span></span>
+<span id="cb50-322"><a href="#cb50-322" aria-hidden="true" tabindex="-1"></a><span class="in">                      mutate(fitted_values=gam4d$gam$fitted.values), by=var)</span></span>
+<span id="cb50-323"><a href="#cb50-323" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-324"><a href="#cb50-324" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiD4 &lt;- dtaiC4 |&gt;</span></span>
+<span id="cb50-325"><a href="#cb50-325" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(date.x, ind_day, ind_hour, fitted_values, mode) |&gt;</span></span>
+<span id="cb50-326"><a href="#cb50-326" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(nominator=(mode-fitted_values)^2, denominator=(mode-mean(mode))^2)</span></span>
+<span id="cb50-327"><a href="#cb50-327" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-328"><a href="#cb50-328" aria-hidden="true" tabindex="-1"></a><span class="in">R2gam4d &lt;- 1-(sum(dtaiD4$nominator)/sum(dtaiD4$denominator))</span></span>
+<span id="cb50-329"><a href="#cb50-329" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-330"><a href="#cb50-330" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-331"><a href="#cb50-331" aria-hidden="true" tabindex="-1"></a><span class="fu">### Save data</span></span>
+<span id="cb50-332"><a href="#cb50-332" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-333"><a href="#cb50-333" aria-hidden="true" tabindex="-1"></a><span class="in">```{r save_data_objects_gam4}</span></span>
+<span id="cb50-334"><a href="#cb50-334" aria-hidden="true" tabindex="-1"></a><span class="in">saveRDS(gam4d, file="data/mode06_gam4d.RDS")</span></span>
+<span id="cb50-335"><a href="#cb50-335" aria-hidden="true" tabindex="-1"></a><span class="in">saveRDS(dtaiB4, file="data/mode06_dtaiB4.RDS")</span></span>
+<span id="cb50-336"><a href="#cb50-336" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-337"><a href="#cb50-337" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-338"><a href="#cb50-338" aria-hidden="true" tabindex="-1"></a><span class="fu">## Temperature and relative humidity effect plus varying daily pattern</span></span>
+<span id="cb50-339"><a href="#cb50-339" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-340"><a href="#cb50-340" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step: 1 Initial model</span></span>
+<span id="cb50-341"><a href="#cb50-341" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-342"><a href="#cb50-342" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam6_fit_initial_model}</span></span>
+<span id="cb50-343"><a href="#cb50-343" aria-hidden="true" tabindex="-1"></a><span class="in">gam6 &lt;- gam(mode ~  te(td01, ind_day, bs="cc") + s(temp, bs="cr") + </span></span>
+<span id="cb50-344"><a href="#cb50-344" aria-hidden="true" tabindex="-1"></a><span class="in">              s(humid, bs="cr"), data=dtai, method="GCV.Cp", </span></span>
+<span id="cb50-345"><a href="#cb50-345" aria-hidden="true" tabindex="-1"></a><span class="in">            control=list(nthreads=nc))</span></span>
+<span id="cb50-346"><a href="#cb50-346" aria-hidden="true" tabindex="-1"></a><span class="in">summary(gam6)</span></span>
+<span id="cb50-347"><a href="#cb50-347" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-348"><a href="#cb50-348" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-349"><a href="#cb50-349" aria-hidden="true" tabindex="-1"></a><span class="fu">### Structural component $w$ (FPCA)</span></span>
+<span id="cb50-350"><a href="#cb50-350" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-351"><a href="#cb50-351" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Assign residuals</span></span>
+<span id="cb50-352"><a href="#cb50-352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-353"><a href="#cb50-353" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam6_assign_residuals}</span></span>
+<span id="cb50-354"><a href="#cb50-354" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiA6 &lt;- left_join(dtai, </span></span>
+<span id="cb50-355"><a href="#cb50-355" aria-hidden="true" tabindex="-1"></a><span class="in">                    drop_na(dtai, mode, temp, humid) |&gt; </span></span>
+<span id="cb50-356"><a href="#cb50-356" aria-hidden="true" tabindex="-1"></a><span class="in">                      mutate(gam6res=gam6$residuals), </span></span>
+<span id="cb50-357"><a href="#cb50-357" aria-hidden="true" tabindex="-1"></a><span class="in">                    by=var)</span></span>
+<span id="cb50-358"><a href="#cb50-358" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-359"><a href="#cb50-359" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-360"><a href="#cb50-360" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step: 2 FPCA</span></span>
+<span id="cb50-361"><a href="#cb50-361" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-362"><a href="#cb50-362" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam6_FPCA}</span></span>
+<span id="cb50-363"><a href="#cb50-363" aria-hidden="true" tabindex="-1"></a><span class="in"># find days without any data (only NA's)</span></span>
+<span id="cb50-364"><a href="#cb50-364" aria-hidden="true" tabindex="-1"></a><span class="in">NAgeq24 &lt;- dtaiA6 |&gt;</span></span>
+<span id="cb50-365"><a href="#cb50-365" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(gam6res, ind_day, ind_hour) |&gt;</span></span>
+<span id="cb50-366"><a href="#cb50-366" aria-hidden="true" tabindex="-1"></a><span class="in">  group_by(ind_day)|&gt;</span></span>
+<span id="cb50-367"><a href="#cb50-367" aria-hidden="true" tabindex="-1"></a><span class="in">  summarise(across(-c(ind_hour), ~sum(is.na(.))&gt;=21)) |&gt;</span></span>
+<span id="cb50-368"><a href="#cb50-368" aria-hidden="true" tabindex="-1"></a><span class="in">  filter(gam6res==TRUE) |&gt;</span></span>
+<span id="cb50-369"><a href="#cb50-369" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(-gam6res)</span></span>
+<span id="cb50-370"><a href="#cb50-370" aria-hidden="true" tabindex="-1"></a><span class="in">  </span></span>
+<span id="cb50-371"><a href="#cb50-371" aria-hidden="true" tabindex="-1"></a><span class="in">fpcaRes &lt;- fpca.face(</span></span>
+<span id="cb50-372"><a href="#cb50-372" aria-hidden="true" tabindex="-1"></a><span class="in">  Y=dtaiA6 |&gt;</span></span>
+<span id="cb50-373"><a href="#cb50-373" aria-hidden="true" tabindex="-1"></a><span class="in">    dplyr::select(gam6res, ind_day, ind_hour) |&gt;</span></span>
+<span id="cb50-374"><a href="#cb50-374" aria-hidden="true" tabindex="-1"></a><span class="in">    filter(!ind_day %in% NAgeq24$ind_day) |&gt;</span></span>
+<span id="cb50-375"><a href="#cb50-375" aria-hidden="true" tabindex="-1"></a><span class="in">    pivot_wider(names_from=ind_day, values_from=gam6res) |&gt;</span></span>
+<span id="cb50-376"><a href="#cb50-376" aria-hidden="true" tabindex="-1"></a><span class="in">    dplyr::select(-ind_hour) |&gt;</span></span>
+<span id="cb50-377"><a href="#cb50-377" aria-hidden="true" tabindex="-1"></a><span class="in">    as.matrix() |&gt;</span></span>
+<span id="cb50-378"><a href="#cb50-378" aria-hidden="true" tabindex="-1"></a><span class="in">    t(),</span></span>
+<span id="cb50-379"><a href="#cb50-379" aria-hidden="true" tabindex="-1"></a><span class="in">    knots=20,</span></span>
+<span id="cb50-380"><a href="#cb50-380" aria-hidden="true" tabindex="-1"></a><span class="in">  pve=.99)</span></span>
+<span id="cb50-381"><a href="#cb50-381" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-382"><a href="#cb50-382" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-383"><a href="#cb50-383" aria-hidden="true" tabindex="-1"></a><span class="fu">#### FPCA</span></span>
+<span id="cb50-384"><a href="#cb50-384" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-385"><a href="#cb50-385" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Prepare for refit with functional random effects</span></span>
+<span id="cb50-386"><a href="#cb50-386" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-387"><a href="#cb50-387" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam6_include_pricipal_components}</span></span>
+<span id="cb50-388"><a href="#cb50-388" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiB6 &lt;- left_join(</span></span>
+<span id="cb50-389"><a href="#cb50-389" aria-hidden="true" tabindex="-1"></a><span class="in">  dtai, dtaiA6 |&gt; mutate(</span></span>
+<span id="cb50-390"><a href="#cb50-390" aria-hidden="true" tabindex="-1"></a><span class="in">    fpcaRes$efunctions |&gt;</span></span>
+<span id="cb50-391"><a href="#cb50-391" aria-hidden="true" tabindex="-1"></a><span class="in">    data.frame() |&gt;</span></span>
+<span id="cb50-392"><a href="#cb50-392" aria-hidden="true" tabindex="-1"></a><span class="in">    slice(rep(row_number(), nd)) |&gt;</span></span>
+<span id="cb50-393"><a href="#cb50-393" aria-hidden="true" tabindex="-1"></a><span class="in">    'colnames&lt;-' (sprintf("ef%02d", 1:fpcaRes$npc)))</span></span>
+<span id="cb50-394"><a href="#cb50-394" aria-hidden="true" tabindex="-1"></a><span class="in">  , by=var) |&gt;</span></span>
+<span id="cb50-395"><a href="#cb50-395" aria-hidden="true" tabindex="-1"></a><span class="in">   mutate(ind_dayf=factor(ind_day))</span></span>
+<span id="cb50-396"><a href="#cb50-396" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-397"><a href="#cb50-397" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-398"><a href="#cb50-398" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step: 3 Refitted model</span></span>
+<span id="cb50-399"><a href="#cb50-399" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-400"><a href="#cb50-400" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Refit with functional random effects (lme4 and mgcv)</span></span>
+<span id="cb50-401"><a href="#cb50-401" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-402"><a href="#cb50-402" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam6d_refit_model}</span></span>
+<span id="cb50-403"><a href="#cb50-403" aria-hidden="true" tabindex="-1"></a><span class="in">eq &lt;- paste0("mode~", </span></span>
+<span id="cb50-404"><a href="#cb50-404" aria-hidden="true" tabindex="-1"></a><span class="in">             "te(", "td01, ind_day", ",bs = 'cc')", "+", </span></span>
+<span id="cb50-405"><a href="#cb50-405" aria-hidden="true" tabindex="-1"></a><span class="in">             "s(", "temp", ", bs = 'cr')", "+", </span></span>
+<span id="cb50-406"><a href="#cb50-406" aria-hidden="true" tabindex="-1"></a><span class="in">             "s(", "humid", ", bs = 'cr')")</span></span>
+<span id="cb50-407"><a href="#cb50-407" aria-hidden="true" tabindex="-1"></a><span class="in">re &lt;- paste0("~", paste((sprintf("ef%02d", 1:fpcaRes$npc)), collapse="+"), "-1")</span></span>
+<span id="cb50-408"><a href="#cb50-408" aria-hidden="true" tabindex="-1"></a><span class="in">gam6d &lt;- gamm(as.formula(eq), data=dtaiB6, random=list(ind_dayf=pdDiag(as.formula(re))), </span></span>
+<span id="cb50-409"><a href="#cb50-409" aria-hidden="true" tabindex="-1"></a><span class="in">              control=list(msMaxIter=100, msMaxEval=1000), method="ML")</span></span>
+<span id="cb50-410"><a href="#cb50-410" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-411"><a href="#cb50-411" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-412"><a href="#cb50-412" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Compute R2 for fixed effect model</span></span>
+<span id="cb50-413"><a href="#cb50-413" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-414"><a href="#cb50-414" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam6d_R2}</span></span>
+<span id="cb50-415"><a href="#cb50-415" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiC6 &lt;- right_join(dtaiB6, drop_na(dtai, mode, temp, humid) |&gt; </span></span>
+<span id="cb50-416"><a href="#cb50-416" aria-hidden="true" tabindex="-1"></a><span class="in">                      mutate(fitted_values=gam6d$gam$fitted.values), by=var)</span></span>
+<span id="cb50-417"><a href="#cb50-417" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-418"><a href="#cb50-418" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiD6 &lt;- dtaiC6 |&gt;</span></span>
+<span id="cb50-419"><a href="#cb50-419" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(date.x, ind_day, ind_hour, fitted_values, mode) |&gt;</span></span>
+<span id="cb50-420"><a href="#cb50-420" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(nominator=(mode-fitted_values)^2, denominator=(mode-mean(mode))^2)</span></span>
+<span id="cb50-421"><a href="#cb50-421" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-422"><a href="#cb50-422" aria-hidden="true" tabindex="-1"></a><span class="in">R2gam6d &lt;- 1-(sum(dtaiD6$nominator)/sum(dtaiD6$denominator))</span></span>
+<span id="cb50-423"><a href="#cb50-423" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-424"><a href="#cb50-424" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-425"><a href="#cb50-425" aria-hidden="true" tabindex="-1"></a><span class="fu">### Save data</span></span>
+<span id="cb50-426"><a href="#cb50-426" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-427"><a href="#cb50-427" aria-hidden="true" tabindex="-1"></a><span class="in">```{r save_data_objects_gam6}</span></span>
+<span id="cb50-428"><a href="#cb50-428" aria-hidden="true" tabindex="-1"></a><span class="in">saveRDS(gam6d, file="data/mode06_gam6d.RDS")</span></span>
+<span id="cb50-429"><a href="#cb50-429" aria-hidden="true" tabindex="-1"></a><span class="in">saveRDS(dtaiB6, file="data/mode06_dtaiB6.RDS")</span></span>
+<span id="cb50-430"><a href="#cb50-430" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-431"><a href="#cb50-431" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-432"><a href="#cb50-432" aria-hidden="true" tabindex="-1"></a><span class="fu">## Temperature and relative humidity effect (interaction) plus varying daily pattern</span></span>
+<span id="cb50-433"><a href="#cb50-433" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-434"><a href="#cb50-434" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step: 1 Initial model</span></span>
+<span id="cb50-435"><a href="#cb50-435" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-436"><a href="#cb50-436" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam7_fit_initial_model}</span></span>
+<span id="cb50-437"><a href="#cb50-437" aria-hidden="true" tabindex="-1"></a><span class="in">gam7 &lt;- gam(mode ~  te(td01, ind_day, bs="cc") + te(temp, humid, bs="cr"), </span></span>
+<span id="cb50-438"><a href="#cb50-438" aria-hidden="true" tabindex="-1"></a><span class="in">            data=dtai, method="GCV.Cp", control=list(nthreads=nc))</span></span>
+<span id="cb50-439"><a href="#cb50-439" aria-hidden="true" tabindex="-1"></a><span class="in">summary(gam7)</span></span>
+<span id="cb50-440"><a href="#cb50-440" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-441"><a href="#cb50-441" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-442"><a href="#cb50-442" aria-hidden="true" tabindex="-1"></a><span class="fu">### Structural component $w$ (FPCA)</span></span>
+<span id="cb50-443"><a href="#cb50-443" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-444"><a href="#cb50-444" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Assign residuals</span></span>
+<span id="cb50-445"><a href="#cb50-445" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-446"><a href="#cb50-446" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam7_assign_residuals}</span></span>
+<span id="cb50-447"><a href="#cb50-447" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiA7 &lt;- left_join(dtai, </span></span>
+<span id="cb50-448"><a href="#cb50-448" aria-hidden="true" tabindex="-1"></a><span class="in">                    drop_na(dtai, mode, temp, humid) |&gt; </span></span>
+<span id="cb50-449"><a href="#cb50-449" aria-hidden="true" tabindex="-1"></a><span class="in">                      mutate(gam7res=gam7$residuals), </span></span>
+<span id="cb50-450"><a href="#cb50-450" aria-hidden="true" tabindex="-1"></a><span class="in">                    by=var)</span></span>
+<span id="cb50-451"><a href="#cb50-451" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-452"><a href="#cb50-452" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-453"><a href="#cb50-453" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step: 2 FPCA</span></span>
+<span id="cb50-454"><a href="#cb50-454" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-455"><a href="#cb50-455" aria-hidden="true" tabindex="-1"></a><span class="fu">#### FPCA</span></span>
+<span id="cb50-456"><a href="#cb50-456" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-457"><a href="#cb50-457" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam7_FPCA, eval=TRUE}</span></span>
+<span id="cb50-458"><a href="#cb50-458" aria-hidden="true" tabindex="-1"></a><span class="in"># find days without any data (only NA's)</span></span>
+<span id="cb50-459"><a href="#cb50-459" aria-hidden="true" tabindex="-1"></a><span class="in">NAgeq24 &lt;- dtaiA7 |&gt;</span></span>
+<span id="cb50-460"><a href="#cb50-460" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(gam7res, ind_day, ind_hour) |&gt;</span></span>
+<span id="cb50-461"><a href="#cb50-461" aria-hidden="true" tabindex="-1"></a><span class="in">  group_by(ind_day)|&gt;</span></span>
+<span id="cb50-462"><a href="#cb50-462" aria-hidden="true" tabindex="-1"></a><span class="in">  summarise(across(-c(ind_hour), ~sum(is.na(.))&gt;=21)) |&gt;</span></span>
+<span id="cb50-463"><a href="#cb50-463" aria-hidden="true" tabindex="-1"></a><span class="in">  filter(gam7res==TRUE) |&gt;</span></span>
+<span id="cb50-464"><a href="#cb50-464" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(-gam7res)</span></span>
+<span id="cb50-465"><a href="#cb50-465" aria-hidden="true" tabindex="-1"></a><span class="in">  </span></span>
+<span id="cb50-466"><a href="#cb50-466" aria-hidden="true" tabindex="-1"></a><span class="in">fpcaRes &lt;- fpca.face(</span></span>
+<span id="cb50-467"><a href="#cb50-467" aria-hidden="true" tabindex="-1"></a><span class="in">  Y=dtaiA7 |&gt;</span></span>
+<span id="cb50-468"><a href="#cb50-468" aria-hidden="true" tabindex="-1"></a><span class="in">    dplyr::select(gam7res, ind_day, ind_hour) |&gt;</span></span>
+<span id="cb50-469"><a href="#cb50-469" aria-hidden="true" tabindex="-1"></a><span class="in">    filter(!ind_day %in% NAgeq24$ind_day) |&gt;</span></span>
+<span id="cb50-470"><a href="#cb50-470" aria-hidden="true" tabindex="-1"></a><span class="in">    pivot_wider(names_from=ind_day, values_from=gam7res) |&gt;</span></span>
+<span id="cb50-471"><a href="#cb50-471" aria-hidden="true" tabindex="-1"></a><span class="in">    dplyr::select(-ind_hour) |&gt;</span></span>
+<span id="cb50-472"><a href="#cb50-472" aria-hidden="true" tabindex="-1"></a><span class="in">    as.matrix() |&gt;</span></span>
+<span id="cb50-473"><a href="#cb50-473" aria-hidden="true" tabindex="-1"></a><span class="in">    t(),</span></span>
+<span id="cb50-474"><a href="#cb50-474" aria-hidden="true" tabindex="-1"></a><span class="in">    knots=20,</span></span>
+<span id="cb50-475"><a href="#cb50-475" aria-hidden="true" tabindex="-1"></a><span class="in">  pve=.99)</span></span>
+<span id="cb50-476"><a href="#cb50-476" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-477"><a href="#cb50-477" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-478"><a href="#cb50-478" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Prepare for refit with functional random effects</span></span>
+<span id="cb50-479"><a href="#cb50-479" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-480"><a href="#cb50-480" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam7_include_pricipal_components}</span></span>
+<span id="cb50-481"><a href="#cb50-481" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiB7 &lt;- left_join(</span></span>
+<span id="cb50-482"><a href="#cb50-482" aria-hidden="true" tabindex="-1"></a><span class="in">  dtai, dtaiA7 |&gt; mutate(</span></span>
+<span id="cb50-483"><a href="#cb50-483" aria-hidden="true" tabindex="-1"></a><span class="in">    fpcaRes$efunctions |&gt;</span></span>
+<span id="cb50-484"><a href="#cb50-484" aria-hidden="true" tabindex="-1"></a><span class="in">    data.frame() |&gt;</span></span>
+<span id="cb50-485"><a href="#cb50-485" aria-hidden="true" tabindex="-1"></a><span class="in">    slice(rep(row_number(), nd)) |&gt;</span></span>
+<span id="cb50-486"><a href="#cb50-486" aria-hidden="true" tabindex="-1"></a><span class="in">    'colnames&lt;-' (sprintf("ef%02d", 1:fpcaRes$npc)))</span></span>
+<span id="cb50-487"><a href="#cb50-487" aria-hidden="true" tabindex="-1"></a><span class="in">  , by=var) |&gt;</span></span>
+<span id="cb50-488"><a href="#cb50-488" aria-hidden="true" tabindex="-1"></a><span class="in">   mutate(ind_dayf=factor(ind_day))</span></span>
+<span id="cb50-489"><a href="#cb50-489" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-490"><a href="#cb50-490" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-491"><a href="#cb50-491" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step: 3 Refitted model</span></span>
+<span id="cb50-492"><a href="#cb50-492" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-493"><a href="#cb50-493" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Refit with functional random effects (lme4 and mgcv)</span></span>
+<span id="cb50-494"><a href="#cb50-494" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-495"><a href="#cb50-495" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam7d_refit_model}</span></span>
+<span id="cb50-496"><a href="#cb50-496" aria-hidden="true" tabindex="-1"></a><span class="in">eq &lt;- paste0("mode~", </span></span>
+<span id="cb50-497"><a href="#cb50-497" aria-hidden="true" tabindex="-1"></a><span class="in">             "te(", "td01, ind_day", ",bs = 'cc')", "+", </span></span>
+<span id="cb50-498"><a href="#cb50-498" aria-hidden="true" tabindex="-1"></a><span class="in">             "te(", "temp, humid", ", bs = 'cr')")</span></span>
+<span id="cb50-499"><a href="#cb50-499" aria-hidden="true" tabindex="-1"></a><span class="in">re &lt;- paste0("~", paste((sprintf("ef%02d", 1:fpcaRes$npc)), collapse="+"), "-1")</span></span>
+<span id="cb50-500"><a href="#cb50-500" aria-hidden="true" tabindex="-1"></a><span class="in">gam7d &lt;- gamm(as.formula(eq), data=dtaiB7, random=list(ind_dayf=pdDiag(as.formula(re))), </span></span>
+<span id="cb50-501"><a href="#cb50-501" aria-hidden="true" tabindex="-1"></a><span class="in">              method="ML")</span></span>
+<span id="cb50-502"><a href="#cb50-502" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-503"><a href="#cb50-503" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-504"><a href="#cb50-504" aria-hidden="true" tabindex="-1"></a><span class="in">```{r gam7d_R2}</span></span>
+<span id="cb50-505"><a href="#cb50-505" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiC7 &lt;- right_join(dtaiB7, drop_na(dtai, mode, temp, humid) |&gt; </span></span>
+<span id="cb50-506"><a href="#cb50-506" aria-hidden="true" tabindex="-1"></a><span class="in">                      mutate(fitted_values=gam7d$gam$fitted.values), by=var)</span></span>
+<span id="cb50-507"><a href="#cb50-507" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-508"><a href="#cb50-508" aria-hidden="true" tabindex="-1"></a><span class="in">dtaiD7 &lt;- dtaiC7 |&gt;</span></span>
+<span id="cb50-509"><a href="#cb50-509" aria-hidden="true" tabindex="-1"></a><span class="in">  dplyr::select(date.x, ind_day, ind_hour, fitted_values, mode) |&gt;</span></span>
+<span id="cb50-510"><a href="#cb50-510" aria-hidden="true" tabindex="-1"></a><span class="in">  mutate(nominator=(mode-fitted_values)^2, denominator=(mode-mean(mode))^2)</span></span>
+<span id="cb50-511"><a href="#cb50-511" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-512"><a href="#cb50-512" aria-hidden="true" tabindex="-1"></a><span class="in">R2gam7d &lt;- 1-(sum(dtaiD7$nominator)/sum(dtaiD7$denominator))</span></span>
+<span id="cb50-513"><a href="#cb50-513" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-514"><a href="#cb50-514" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-515"><a href="#cb50-515" aria-hidden="true" tabindex="-1"></a><span class="fu">### Save data</span></span>
+<span id="cb50-516"><a href="#cb50-516" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-517"><a href="#cb50-517" aria-hidden="true" tabindex="-1"></a><span class="in">```{r save_data_objects_gam7}</span></span>
+<span id="cb50-518"><a href="#cb50-518" aria-hidden="true" tabindex="-1"></a><span class="in">saveRDS(fpcaRes, "data/mode06_gam7_fpcaRes.RDS")</span></span>
+<span id="cb50-519"><a href="#cb50-519" aria-hidden="true" tabindex="-1"></a><span class="in">saveRDS(gam7d, file="data/mode06_gam7d.RDS")</span></span>
+<span id="cb50-520"><a href="#cb50-520" aria-hidden="true" tabindex="-1"></a><span class="in">saveRDS(dtaiB7, file="data/mode06_dtaiB7.RDS")</span></span>
+<span id="cb50-521"><a href="#cb50-521" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-522"><a href="#cb50-522" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-525"><a href="#cb50-525" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb50-526"><a href="#cb50-526" aria-hidden="true" tabindex="-1"></a>xtable<span class="sc">::</span><span class="fu">xtable</span>(</span>
+<span id="cb50-527"><a href="#cb50-527" aria-hidden="true" tabindex="-1"></a><span class="fu">rbind</span>(</span>
+<span id="cb50-528"><a href="#cb50-528" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(R2gam2d, R2gam4d, R2gam6d, R2gam7d),</span>
+<span id="cb50-529"><a href="#cb50-529" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(<span class="fu">round</span>(<span class="fu">nrow</span>(dtaiD2)<span class="sc">/</span><span class="dv">24</span>, <span class="dv">2</span>), <span class="fu">round</span>(<span class="fu">nrow</span>(dtaiD4)<span class="sc">/</span><span class="dv">24</span>, <span class="dv">2</span>), </span>
+<span id="cb50-530"><a href="#cb50-530" aria-hidden="true" tabindex="-1"></a>        <span class="fu">round</span>(<span class="fu">nrow</span>(dtaiD6)<span class="sc">/</span><span class="dv">24</span>, <span class="dv">2</span>), <span class="fu">round</span>(<span class="fu">nrow</span>(dtaiD7)<span class="sc">/</span><span class="dv">24</span>, <span class="dv">2</span>)),</span>
+<span id="cb50-531"><a href="#cb50-531" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(<span class="fu">nrow</span>(dtaiD2), <span class="fu">nrow</span>(dtaiD4), <span class="fu">nrow</span>(dtaiD6), <span class="fu">nrow</span>(dtaiD7))</span>
+<span id="cb50-532"><a href="#cb50-532" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb50-533"><a href="#cb50-533" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb50-534"><a href="#cb50-534" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-535"><a href="#cb50-535" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-536"><a href="#cb50-536" aria-hidden="true" tabindex="-1"></a><span class="fu">## Computational and session information</span></span>
+<span id="cb50-537"><a href="#cb50-537" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-538"><a href="#cb50-538" aria-hidden="true" tabindex="-1"></a>Hardware information:</span>
+<span id="cb50-539"><a href="#cb50-539" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-540"><a href="#cb50-540" aria-hidden="true" tabindex="-1"></a><span class="in">```{r extract_hardware_specification}</span></span>
+<span id="cb50-541"><a href="#cb50-541" aria-hidden="true" tabindex="-1"></a><span class="in">get_cpu()</span></span>
+<span id="cb50-542"><a href="#cb50-542" aria-hidden="true" tabindex="-1"></a><span class="in">get_ram()</span></span>
+<span id="cb50-543"><a href="#cb50-543" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-544"><a href="#cb50-544" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-545"><a href="#cb50-545" aria-hidden="true" tabindex="-1"></a>Computation time:</span>
+<span id="cb50-546"><a href="#cb50-546" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-547"><a href="#cb50-547" aria-hidden="true" tabindex="-1"></a><span class="in">```{r computational_time}</span></span>
+<span id="cb50-548"><a href="#cb50-548" aria-hidden="true" tabindex="-1"></a><span class="in">print(paste("Computation time:", round(Sys.time() - start_time, 2)[[1]], "seconds"))</span></span>
+<span id="cb50-549"><a href="#cb50-549" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb50-550"><a href="#cb50-550" aria-hidden="true" tabindex="-1"></a>Session information:</span>
+<span id="cb50-551"><a href="#cb50-551" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-552"><a href="#cb50-552" aria-hidden="true" tabindex="-1"></a><span class="in">```{r session_info}</span></span>
+<span id="cb50-553"><a href="#cb50-553" aria-hidden="true" tabindex="-1"></a><span class="in">sessionInfo()</span></span>
+<span id="cb50-554"><a href="#cb50-554" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+</code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -47,3 +47,10 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# data files
+data/*
+
+# exception to the rule
+!data/.gitkeep 
+!data/simulations/.gitkeep 

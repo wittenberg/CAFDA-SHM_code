@@ -1,0 +1,312 @@
+---
+title: "Covariate-Adjusted Functional Data Analysis for Structural Health Monitoring"
+subtitle: "Simulations: model training pipe line parallel computation results"
+
+# Freeze computed outputs
+freeze: true
+
+# Enable banner style title blocks
+title-block-banner: true
+
+# Enable CC licence appendix
+license: "CC BY"
+
+# Default for table of contents
+toc: true
+toc-title: Table of contents
+toc-location: left
+
+# Default knitr options
+execute:
+  echo: true
+  message: true
+  warning: true
+cache: false
+
+date: "10/07/2024" 
+
+format:
+  html:
+    embed-resources: false
+    code-fold: false
+    code-summary: "Code"
+    code-tools:
+      source: true
+      toggle: true
+      caption: none
+
+knitr:
+  opts_chunk:
+    dev:
+      - png
+      - pdf
+      
+editor: source
+
+author:
+  - name: Philipp Wittenberg
+    corresponding: true
+    id: pw
+    orcid: 0000-0001-7151-8243
+    email: pwitten@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Lizzie Neumann
+    id: ln
+    orcid: 0000-0003-2256-1127
+    email: neumannl@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Alexander Mendler
+    id: ln
+    orcid: 0000-0002-7492-6194
+    email: alexander.mendler@tum.de
+    affiliation: 
+      - name: Technical University of Munich
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de
+  - name: Jan Gertheiss
+    id: jg
+    orcid: 0000-0001-6777-4746
+    email: gertheij@hsu-hh.de
+    affiliation: 
+      - name: Helmut Schmidt University
+        city: Hamburg
+        country: Germany
+        url: www.hsu-hh.de        
+        
+        
+
+citation: 
+  container-title: arXiv:2408.02106
+  doi: 10.48550/arXiv.2408.02106
+  
+bibliography:
+  - literature.bib
+link-citations: true
+
+output: github_document
+---
+```{r}
+start_time <- Sys.time()
+```
+
+Load libraries
+
+```{r load_libraries, message=FALSE}
+# Package names
+packages <- c("benchmarkme", "dplyr", "funData", "lme4", "mgcv", "parallel", "purrr", 
+              "refund", "tidyr")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+```
+
+## Parallel data generation setup
+
+```{r setup}
+RNGkind("L'Ecuyer-CMRG")  ## Random number generator for parallel processing
+ISEED <- 42         ## Seed for reproduction
+nc    <- 8         ## Number of cores used
+fb1   <- function(z) exp(-z/2.2)-.5 ## Transformation function f(z)
+meanU <- 5          ## Mean Temperature level
+Tmin  <- 0          ## Minimum Temperature
+Tmax  <- 12         ## Maximum Temperature
+NAOBS <- 0          ## Number of NA observations per profile
+DAY   <- seq(.5, 23.5, 1)/24  ## Day profile sequence for estimation and plotting
+SIZE  <- 1:100      ## Numer of simulation runs
+N     <- 300        ## Number of profiles
+list1 <- list()     ## List for generated intercept profiles
+list2 <- list()     ## List for generated transformed temperature
+list3 <- list()     ## List for generated eigenfunctions
+list4 <- list()     ## List for generated variances
+# adapt the following path to your local directory  
+DIR <- "data/simulations/"
+```
+
+## Parallel data generation simulation runs
+
+```{r simulation_runs}
+cl <- makeCluster(nc)
+clusterSetRNGStream(cl, iseed = ISEED)
+clusterEvalQ(cl, {library(dplyr); library(tidyr); library(purrr); library(mgcv); library(nlme); library(lme4)})
+parallel::clusterExport(cl, varlist=c("NAOBS", "list1", "list2", "list3", 
+                                      "list4", "N", "fb1", "meanU", "Tmin", 
+                                      "Tmax", "DAY", "DIR"), envir=environment())
+res <- parLapply(cl, SIZE, function(i) {
+  ################
+  # Step 0. Data #
+  ################
+  hseq <- DAY*24  ## sequence of hours per day
+  ## 1. simulate structural component without shift
+  plain <- funData::simFunData(hseq, M=3, eFunType="Poly", 
+                               eValType="exponential", N=N)
+  noisy <- funData::addError(plain$simData, sd=.2)
+
+  # 3. simulate_covariate_mean_profile
+  argvals <- 2*pi*DAY
+  covmeanprof <- sin(0.3+argvals)
+  
+  # 4. simulate global intercept
+  iglobal <- outer(-.05, sin(argvals*1/2)+cos(argvals*2))
+  aldf <- data.frame(iglobal-mean(iglobal))
+
+  ## 5. Simulate complete dataset
+
+  ## 5.1 Global intercept (same profile for N days)
+  al <- purrr::map_dfr(seq_len(N),~aldf) |>
+    t() |>
+    data.frame() |>
+    'colnames<-' (c(sprintf("%03d", 1:N))) |>
+    mutate(ind_hour=row_number()) |>
+    pivot_longer(cols=!ind_hour, names_to="ind_day", values_to="alpha") |>
+    arrange(ind_day)
+
+  ## 5.2 Covariate data
+  z <- sapply(1:N, function(i) -1*runif(1, 0, 4)*covmeanprof+runif(1, 2, 10)) |>
+    data.frame()
+  ## 5.3 Structural component 
+  w <- sapply(1:24, function(j) noisy@X[, j]) |> 
+    t() |>
+    data.frame() |>
+    'colnames<-' (c(sprintf("%03d", 1:N))) |>
+    mutate(ind_hour=row_number()) |>
+    pivot_longer(cols=!ind_hour, names_to="ind_day", values_to="w") |>
+    arrange(ind_day)
+
+  ## 5.4 Compile complete data set  
+  simdf <- z |>
+    'colnames<-' (c(sprintf("%03d", 1:N))) |>
+    mutate(ind_hour=row_number()) |>
+    pivot_longer(cols=!ind_hour, names_to="ind_day", values_to="z") |>
+    arrange(ind_day) |>
+    mutate(fz=fb1(z), meanU=meanU, intercept=al$alpha) |>
+    full_join(w, by=c("ind_hour", "ind_day")) |>
+    group_by(ind_day) |>
+    mutate(u=intercept+fz+w+meanU, td01=hseq) |>
+    ungroup()
+  
+  ###################################################
+  # Step 1. Initial model with working independence #
+  ###################################################
+  ## Simple GAM: covariate effect plus recurring daily pattern
+  gam3 <- mgcv::gam(u ~ s(td01, bs="cc") + s(z, bs="cr"), data=simdf, 
+                    method="GCV.Cp")
+
+  ## FPCA on model residuals
+  ### Structural component $w$
+  ## assign_residuals
+  nd <- simdf$ind_day |> n_distinct()
+  var <- c("z", "u", "ind_day", "meanU", "ind_hour", "td01")
+  dtaiAsim2 <- left_join(simdf, drop_na(simdf, u, z) |> 
+                           mutate(gam3res=gam3$residuals), by=var)
+
+  ###################################################
+  # Step 2. Functional Principal Component Analysis #
+  ###################################################
+  ## find days without any data (only NA's)
+  NAgeq24 <- dtaiAsim2 |>
+    select(gam3res, ind_day, ind_hour) |>
+    group_by(ind_day)|>
+    summarise(across(-c(ind_hour), ~sum(is.na(.))>=21)) |>
+    filter(gam3res==TRUE) |>
+    select(-gam3res)
+  
+  fpcaResSim <- refund::fpca.face(
+    Y=dtaiAsim2 |>
+        select(gam3res, ind_day, ind_hour) |>
+        filter(!ind_day %in% NAgeq24$ind_day) |>
+        pivot_wider(names_from=ind_day, values_from=gam3res) |>
+        select(-ind_hour) |>
+        as.matrix() |>
+        t(),
+    knots=20,
+    pve=.99)
+  saveRDS(fpcaResSim, paste0(DIR, "fpcaResSim_simulation_runlength", "_run_", i, ".RDS"))
+
+  ## gam3_include_pricipal_components
+  dtaiBsim2 <- left_join(
+    simdf, dtaiAsim2 |> mutate(
+      fpcaResSim$efunctions |>
+      data.frame() |>
+      slice(rep(row_number(), nd)) |>
+      # slice(1:n()-1) |>
+      'colnames<-' (sprintf("ef%02d", 1:fpcaResSim$npc)))
+    , by=var) |>
+    mutate(ind_dayf=factor(ind_day))
+
+  ## check flipping nessecary
+  if(mean(dtaiBsim2$ef01) < 0) {dtaiBsim2 <- mutate(dtaiBsim2, ef01=ef01*-1)}
+  if(mean(diff(dtaiBsim2$ef02, differences=1)) < 0) {dtaiBsim2 <- mutate(dtaiBsim2, ef02=ef02*-1)}
+  if(mean(diff(dtaiBsim2$ef03, differences=2)) < 0) {dtaiBsim2 <- mutate(dtaiBsim2, ef03=ef03*-1)}
+  ###########################################################
+  # Step 3. Functional model with functional random effects #
+  ###########################################################  
+  eq    <- paste0("u~", "s(", "td01", ", bs = 'cc')", "+", "s(", "z", ", bs = 'cr')")
+  re2   <- paste0("~", paste((sprintf("ef%02d", 1:fpcaResSim$npc)), collapse="+"), "-1")
+  gam2d <- mgcv::gamm(as.formula(eq), data=dtaiBsim2, random=list(ind_dayf=nlme::pdDiag(as.formula(re2)))) 
+  # change to REML=FALSE
+  saveRDS(gam2d, paste0(DIR, "gam2d_simulation_runlength", "_run_", i, ".RDS"))
+  zart    <- seq(Tmin, Tmax-.5, .5)
+  td01art <- hseq
+  
+  # Save intercept and covariate smoother and eigenfunctions in lists
+  ## s(td01) smoother
+  list1[[i]] <- data.frame(cbind("td01"=td01art, 
+                                 "est"=predict(gam2d$gam, type="terms", 
+                                               newdata=data.frame(z=zart,                                                                                           td01=td01art))[,1]))
+  ## s(z) smoother
+  list2[[i]] <- data.frame(cbind("z"=zart, 
+                                 "est"=predict(gam2d$gam, type="terms", 
+                                               newdata=data.frame(z=zart, 
+                                                                  td01=td01art))[,2] +
+                                   lme4::fixef(gam2d$lme)[1]))
+  ## Eigenfunctions
+  list3[[i]] <- select(dtaiBsim2, ind_hour, starts_with("ef")) |>
+     mutate(td01=rep(DAY, N)) |>
+      select(-ind_hour)
+  list4[[i]] <-  nlme::VarCorr(gam2d$lme)[c("ef01", "ef02", "ef03"),][,"Variance"] |>
+  t() |>
+  as.data.frame() |>
+  as.numeric()
+  list(list1, list2, list3, list4)
+})
+parallel::stopCluster(cl)
+```
+
+```{r save_generated data}
+saveRDS(res, paste0(DIR, "Simulation_study_N", N, "_NAOBS", NAOBS, "_SEED", ISEED,"_REML.RDS"))
+```
+
+## Computational and session information
+
+Hardware information:
+
+```{r extract_hardware_specification}
+get_cpu()
+get_ram()
+```
+
+Computation time:
+
+```{r computational_time}
+print(paste("Computation time:", round(Sys.time() - start_time, 2)[[1]], "seconds"))
+```
+Session information:
+
+```{r session_info}
+sessionInfo()
+```
