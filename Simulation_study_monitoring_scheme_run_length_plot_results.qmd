@@ -120,6 +120,10 @@ theme_set(theme_bw() +
                   strip.background=element_rect(fill="white"),
                   strip.text=element_text(size=10, face="bold"),
                   plot.title=element_text(hjust=.5),
+                  legend.text=element_text(size=7),
+                  legend.spacing.y = unit(0, "pt"),
+                  legend.spacing.x = unit(0, "pt"),
+                  legend.box.margin = margin(0, 0, 0, 0),
                   axis.text.x = element_text(color="black"),
                   axis.text.y = element_text(color="black"),
                   axis.ticks = element_line(color = "black")
@@ -127,7 +131,7 @@ theme_set(theme_bw() +
           )
 
 mcb <- c("#D55E00", "#56B4E9", "#E69F00", "#009E73", "#CC79A7")
-LABS <- lapply(c(0.1, 0.3, 1.0), function(i) bquote(lambda==.(i)))
+LABS <- c(lapply(c(0.1, 0.3, 1.0), function(i) bquote(lambda==.(i))), "bl/mf (hourly)", "bl/mf (av. daily)")
 std_shift <- function(i) sqrt(exp(-(i+1)/2))
 ```
 
@@ -151,6 +155,18 @@ df3 <- purrr::map_df(paste0(DIR,"MEWMA_ARL_r_", 1 ,
   group_by(EFI, delta_vec) |>
   mutate(AARL=mean(ARL), stdARL=sd(ARL), EFI=factor(EFI)) |>
   ungroup()
+
+df4 <- purrr::map_df(paste0(DIR,"SHEWHART_ARL_hourly_r_", 1 , 
+                            "_N_300_RUN_", RUNS, ".rds"), readRDS) |>
+  group_by(EFI, delta_vec) |>
+  mutate(AARL=mean(ARL/24), stdARL=sd(ARL/24), EFI=factor(EFI)) |>
+  ungroup()
+
+df5 <- purrr::map_df(paste0(DIR,"SHEWHART_ARL_daily_r_", 1 , 
+                            "_N_300_RUN_", RUNS, ".rds"), readRDS) |>
+  group_by(EFI, delta_vec) |>
+  mutate(AARL=mean(ARL), stdARL=sd(ARL), EFI=factor(EFI)) |>
+  ungroup()
 ```
 
 ```{r}
@@ -160,21 +176,22 @@ bind_rows(df1, df2, df3, .id="KAPPA") |>
 ```
 
 ```{r MEWMA_simulation_plots_normal_shift, fig.width=8.5, fig.height=3}
-p1 <- bind_rows(df1, df2, df3, .id="LAMBDA") |>
+p1 <- bind_rows(df1, df2, df3, df4, df5, .id="LAMBDA") |>
   mutate(LAMBDA=factor(LAMBDA, labels=LABS)) |>
   ggplot(aes(x=delta_vec, y=AARL, group=LAMBDA, colour=LAMBDA, fill=LAMBDA)) +
     geom_line() +
     geom_ribbon(aes(ymin=AARL-stdARL, ymax=AARL+stdARL), alpha=.2, colour=NA) +
     labs(y="ARL approximation", x=bquote(Shift~size~delta)) +
-    scale_y_log10(breaks=c(1, 10, 50, 100)) +
+    scale_y_log10(breaks=c(1, 10, 50, 100, 1000)) +
     facet_wrap(~EFI, labeller=label_bquote(cols=FPC~.(EFI))) +
-    scale_colour_manual(values = mcb[c(2,3,5)], labels=LABS) +
-    scale_fill_manual(values = mcb[c(2,3,5)], labels=LABS) +
-    theme(legend.position="inside", legend.position.inside=c(.9,.7), legend.title=element_blank())
+    scale_colour_manual(values = mcb[c(2,3,5,1,4)], labels=LABS) +
+    scale_fill_manual(values = mcb[c(2,3,5,1,4)], labels=LABS) +
+    theme(legend.position="none", legend.title=element_blank())
+p1
 ```
 
 ```{r MEWMA_simulation_plots_standardized_shift, fig.width=8.5, fig.height=3}
-p2 <- bind_rows(df1, df2, df3, .id="LAMBDA") |>
+p2 <- bind_rows(df1, df2, df3, df4, df5, .id="LAMBDA") |>
   mutate(LAMBDA=factor(LAMBDA, labels=LABS), 
          std_shift=delta_vec/std_shift(as.numeric(EFI))) |>
   ggplot(aes(x=std_shift, y=AARL, group=LAMBDA, colour=LAMBDA, fill=LAMBDA)) +
@@ -182,15 +199,20 @@ p2 <- bind_rows(df1, df2, df3, .id="LAMBDA") |>
     geom_ribbon(aes(ymin=AARL-stdARL, ymax=AARL+stdARL), alpha=.2, colour=NA) +
     labs(y="ARL approximation", 
          x=bquote(Standardized~shift~size~frac(delta, sqrt(nu[r])))) +
-    scale_y_log10(breaks=c(1, 10, 50, 100)) +
-    scale_x_continuous(breaks=c(1:11)) +
+    scale_y_log10(breaks=c(1, 10, 50, 100, 1000)) +
+    scale_x_continuous(breaks=c(0:11)) +
     facet_wrap(~EFI, labeller=label_bquote(cols=FPC~.(EFI))) +
-    scale_colour_manual(values = mcb[c(2,3,5)], labels=LABS) +
-    scale_fill_manual(values = mcb[c(2,3,5)], labels=LABS) +
-    theme(legend.position="none", legend.title=element_blank())
+    scale_colour_manual(values = mcb[c(2,3,5,1,4)], labels=LABS) +
+    scale_fill_manual(values = mcb[c(2,3,5,1,4)], labels=LABS) +
+    theme(legend.position="inside", 
+          legend.position.inside=c(.55,.84),
+                   # legend.position.inside=c(.253,.65),
+          legend.title=element_blank(),
+          legend.key.size = unit(0.41, "cm")) +
+    guides(fill=guide_legend(ncol=2), colour=guide_legend(ncol=2))
 ```
 
-```{r Figure_5_MEWMA_simulation_plots_combined, fig.width=8.5, fig.height=6}
+```{r Figure_5_MEWMA_simulation_plots_combined, fig.width=8.5, fig.height=6.2}
 p1 + p2 + plot_layout(ncol=1)
 ```
 
