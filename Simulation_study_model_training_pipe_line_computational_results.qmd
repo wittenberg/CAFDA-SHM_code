@@ -23,7 +23,7 @@ execute:
   warning: true
 cache: false
 
-date: "10/07/2024" 
+date: "02/13/2025" 
 
 format:
   html:
@@ -82,8 +82,6 @@ author:
         country: Germany
         url: www.hsu-hh.de        
         
-        
-
 citation: 
   container-title: arXiv:2408.02106
   doi: 10.48550/arXiv.2408.02106
