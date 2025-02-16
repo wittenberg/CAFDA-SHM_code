@@ -72,7 +72,7 @@ The file *Extract_KW51_bridge_data_Maes.Lombaerts_2021.qmd* downloads and extrac
   - data/Dataset_bridge_KW51.RDS (Compiled data set for the KW51 bridge)
 
 # Case study 1 - computational results
-The file *Case_study_1_computational_results_KW51_Mode06.qmd* replicates all computations of the KW51 case study in Section 3 of the main paper.
+The file *Case_study_1_computational_results_KW51_Mode06.qmd* replicates all computations of the KW51 case study in Section 4 of the paper.
 
 * Input: Dataset_bridge_KW51.RDS (Compiled data set KW51 bridge)
 * Output:
@@ -89,18 +89,17 @@ The file *Case_study_1_computational_results_KW51_Mode06.qmd* replicates all com
   - Table 1  (R squared results of all four models)
 
 # Case study 1 - plot results
-The file *Case_study_1_plot_results_KW51_Mode06.qmd* replicates all KW51 case study related plots in Section 3 of the main paper.
+The file *Case_study_1_plot_results_KW51_Mode06.qmd* replicates all KW51 case study related plots in Section 4 of the paper.
 
-* Input: All saved output results stored in data folder from file Case_study_1_computational_results_KW51_Mode06.qmd
+* Input: All saved output results stored in *data* folder from file Case_study_1_computational_results_KW51_Mode06.qmd
 * Output:
-  - Figure 4  (Eigenfunctions basic model)
-  - Figure 5  (Basic model effects)
-  - Figure 6  (Reduced model effects)
-  - Figure 7a (Additive model intercept effect)
-  - Figure 7b (Additive model covariate effects)
-  - Figure 8a (Interaction effect model intercept effect)
-  - Figure 8b (Interaction effect model covariate effect)
-  - Figure 9  (MEWMA control charts in different setups)
+  - Figure 6  (Eigenfunctions basic model)
+  - Figure 7  (Basic model effects)
+  - Figure 8a (Additive model intercept effect)
+  - Figure 8b (Additive model covariate effects)
+  - Figure 9a (Interaction effect model intercept effect)
+  - Figure 9b (Interaction effect model covariate effect)
+  - Figure 10  (MEWMA control charts in different setups)
 
 # Introduction and misc plots
 The file *Introduction_and_misc_plots.qmd* replicates the introduction profiles and data generation process plots.
@@ -108,11 +107,11 @@ The file *Introduction_and_misc_plots.qmd* replicates the introduction profiles 
 * Input: Dataset_bridge_KW51.RDS (Compiled data set KW51 bridge)
 * Output:
   - Figure 1 (KW51 data exemplary response, covariate and error profiles)
-  - Figure A1 (Artificial data exemplary response, covariate and error profiles)
+  - Figure 3 (Artificial data exemplary response, covariate and error profiles)
 
 # Simulation study: model training pipe line - computational results
 The file *Simulation_study_model_training_pipe_line_computational_results.qmd*
-computes 100 runs with J profiles and saves data to data/simulations folder.
+computes 100 runs with J profiles and saves data to *data/simulations* folder.
 
 * Input: -
 * Output: 
@@ -126,7 +125,7 @@ plots initial functions, simulated data run profiles and their mean.
 * Input: 
   - data/simulations/Simulation_study_N300_NAOBS0_SEED42_ML.RDS (Simulated profiles for J=300)
 * Output: 
-  - Figure A2 (Model training pipeline results on simulated profiles)
+  - Figure 4 (Model training pipeline results on simulated profiles)
 
 # Simulation study: monitoring scheme run length - computational results part 1
 The file *Simulations_study_monitoring_scheme_run_length_computational_results.R*
@@ -160,11 +159,11 @@ is an R-script prepared for parallel computing the run-lengths of the hourly She
   - Run-length files for hourly Shewhart charts  
   
 # Simulations monitoring scheme run length - plots
-The file *Simulations_monitoring_scheme_run_length_plots.qmd* plots ARL profiles for different MEWMA smooting parameters.
+The file *Simulations_monitoring_scheme_run_length_plots.qmd* plots ARL profiles for different MEWMA smooting parameters and hourly and daily Shewhart charts.
 
 * Input: 
   - data/simulations/ (Average Run Length profiles for lambda=0.1,0.3,1)
 * Output:
-  - Figure A3 (MEWMA charts Average Run Length performance comparison)
+  - Figure 5 (MEWMA and Shewhart charts Average Run Length performance comparison)
   
 # References  

@@ -71,7 +71,7 @@ compare ([Maes and Lombaert 2021](#ref-Maes.Lombaert_2021)).
 # Case study 1 - computational results
 
 The file *Case_study_1_computational_results_KW51_Mode06.qmd* replicates
-all computations of the KW51 case study in Section 3 of the main paper.
+all computations of the KW51 case study in Section 4 of the paper.
 
 - Input: Dataset_bridge_KW51.RDS (Compiled data set KW51 bridge)
 - Output:
@@ -90,19 +90,18 @@ all computations of the KW51 case study in Section 3 of the main paper.
 # Case study 1 - plot results
 
 The file *Case_study_1_plot_results_KW51_Mode06.qmd* replicates all KW51
-case study related plots in Section 3 of the main paper.
+case study related plots in Section 4 of the paper.
 
-- Input: All saved output results stored in data folder from file
+- Input: All saved output results stored in *data* folder from file
   Case_study_1_computational_results_KW51_Mode06.qmd
 - Output:
-  - Figure 4 (Eigenfunctions basic model)
-  - Figure 5 (Basic model effects)
-  - Figure 6 (Reduced model effects)
-  - Figure 7a (Additive model intercept effect)
-  - Figure 7b (Additive model covariate effects)
-  - Figure 8a (Interaction effect model intercept effect)
-  - Figure 8b (Interaction effect model covariate effect)
-  - Figure 9 (MEWMA control charts in different setups)
+  - Figure 6 (Eigenfunctions basic model)
+  - Figure 7 (Basic model effects)
+  - Figure 8a (Additive model intercept effect)
+  - Figure 8b (Additive model covariate effects)
+  - Figure 9a (Interaction effect model intercept effect)
+  - Figure 9b (Interaction effect model covariate effect)
+  - Figure 10 (MEWMA control charts in different setups)
 
 # Introduction and misc plots
 
@@ -113,14 +112,14 @@ profiles and data generation process plots.
 - Output:
   - Figure 1 (KW51 data exemplary response, covariate and error
     profiles)
-  - Figure A1 (Artificial data exemplary response, covariate and error
+  - Figure 3 (Artificial data exemplary response, covariate and error
     profiles)
 
 # Simulation study: model training pipe line - computational results
 
 The file
 *Simulation_study_model_training_pipe_line_computational_results.qmd*
-computes 100 runs with J profiles and saves data to data/simulations
+computes 100 runs with J profiles and saves data to *data/simulations*
 folder.
 
 - Input: -
@@ -137,7 +136,7 @@ plots initial functions, simulated data run profiles and their mean.
   - data/simulations/Simulation_study_N300_NAOBS0_SEED42_ML.RDS
     (Simulated profiles for J=300)
 - Output:
-  - Figure A2 (Model training pipeline results on simulated profiles)
+  - Figure 4 (Model training pipeline results on simulated profiles)
 
 # Simulation study: monitoring scheme run length - computational results part 1
 
@@ -182,12 +181,14 @@ based on a fit of a piecewise linear model.
 # Simulations monitoring scheme run length - plots
 
 The file *Simulations_monitoring_scheme_run_length_plots.qmd* plots ARL
-profiles for different MEWMA smooting parameters.
+profiles for different MEWMA smooting parameters and hourly and daily
+Shewhart charts.
 
 - Input:
   - data/simulations/ (Average Run Length profiles for lambda=0.1,0.3,1)
 - Output:
-  - Figure A3 (MEWMA charts Average Run Length performance comparison)
+  - Figure 5 (MEWMA and Shewhart charts Average Run Length performance
+    comparison)
 
 # References
 
