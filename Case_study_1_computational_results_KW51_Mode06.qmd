@@ -23,7 +23,7 @@ execute:
   warning: true
 cache: false
 
-date: "10/07/2024" 
+date: "02/13/2025" 
 format:
   html:
     embed-resources: false
@@ -213,9 +213,7 @@ dtaiB2 <- left_join(
 
 ### Step: 3 Refitted model
 
-#### Refit with functional random effects (lme4 and mgcv)
-
-#### lme and mgcv model estimation
+#### Refit with functional random effects (mgcv)
 
 ```{r gam2d_refit_model}
 eq <- paste0("mode~", "s(", "td01", ", bs = 'cc')", "+", "s(", "temp", ", bs = 'cr')")
@@ -304,7 +302,7 @@ dtaiB4 <- left_join(
 
 ### Step: 3 Refitted model
 
-#### Refit with functional random effects (lme4 and mgcv)
+#### Refit with functional random effects (mgcv)
 
 ```{r gam4d_refit_model}
 eq <- paste0("mode~te(", "td01, ind_day", ",bs = 'cc')")
@@ -395,7 +393,7 @@ dtaiB6 <- left_join(
 
 ### Step: 3 Refitted model
 
-#### Refit with functional random effects (lme4 and mgcv)
+#### Refit with functional random effects (mgcv)
 
 ```{r gam6d_refit_model}
 eq <- paste0("mode~", 
@@ -488,7 +486,7 @@ dtaiB7 <- left_join(
 
 ### Step: 3 Refitted model
 
-#### Refit with functional random effects (lme4 and mgcv)
+#### Refit with functional random effects (mgcv)
 
 ```{r gam7d_refit_model}
 eq <- paste0("mode~", 

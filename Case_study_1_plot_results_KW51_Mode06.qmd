@@ -23,7 +23,7 @@ execute:
   warning: true
 cache: false
 
-date: "10/07/2024" 
+date: "02/13/2025" 
 
 format:
   html:
@@ -103,7 +103,7 @@ Load libraries
 
 ```{r load_libraries, results='hide', message=FALSE, warning=FALSE}
 # Package names
-packages <- c("benchmarkme", "dplyr", "forcats", "ggplot2", "gratia", 
+packages <- c("benchmarkme", "dplyr", "forcats", "ggplot2", "gratia", "lme4",
               "mgcv", "patchwork", "plotly", "refund", "spc", 
               "tidyr", "utils", "reticulate") #"reticulate" works only if python is installed
                                 # to save standalone pdf figures of 3-D plots 
@@ -143,7 +143,7 @@ gam2d <- readRDS(file="data/mode06_gam2d.RDS")
 p7 <- draw(gam2d, select="s(td01)", rug=FALSE) + 
   scale_x_continuous(name="Time of day [h]", breaks=seq(0, 24, 6)) +
   labs(y=bquote(italic(tilde(alpha)(t))), title="Recurring daily pattern") +
-  scale_y_continuous(limits=c(-.03, .03)) +
+  scale_y_continuous(limits=c(-.02, .05)) +
     theme(legend.title=element_blank(), legend.position="none",
           axis.text=element_text(size=14),
           axis.title=element_text(size=14), 
@@ -154,7 +154,7 @@ p7 <- draw(gam2d, select="s(td01)", rug=FALSE) +
 p8 <- draw(gam2d, select="s(temp)", rug=FALSE) + 
   labs(x=bquote(Temperature~italic(z(t))~"[°"*C*"]"), y=bquote(italic(f(z(t)))), 
        title="Temperature effect") +
-  scale_y_continuous(limits=c(-.03, .03)) +
+  scale_y_continuous(limits=c(-.02, .05)) +
       theme(legend.title=element_blank(), legend.position="none",
           axis.text=element_text(size=14),
           axis.title=element_text(size=14), 
@@ -212,49 +212,7 @@ df <- VarCorr(gam2d$lme)[c("ef01", "ef02", "ef03", "ef04"),][,"Variance"] |>
   as.numeric()
 100*sum(df[4]/sum(df))
 ```
-
-## Model 2 (KW51_reduced_model)
-
-```{r Figure_8_compute_compute_model_2_interactive_plot, dev='svg'}
-dtaiB4 <- readRDS(file="data/mode06_dtaiB4.RDS")
-gam4d <- readRDS(file="data/mode06_gam4d.RDS")
-
-ds1 <- data_slice(gam4d$gam, td01=evenly(td01, n=100),
-                 ind_day=evenly(ind_day, n=100))
-
-
-mode <- mgcv::predict.gam(gam4d$gam, newdata=ds1, type="terms")
-res1 <- select(ds1, td01, ind_day) |>  mutate(mode=mode[,"te(td01,ind_day)"])
-
-surface1 <- unclass(xtabs(mode ~ td01 + ind_day, data=res1))
-fig0 <- plot_ly(z=~surface1, y=~as.numeric(rownames(surface1)), 
-                x=~as.numeric(colnames(surface1)), cmax=.007, cmin=-.007,
-                type="surface", 
-                contours = list(
-                  z=list(show=FALSE, start=-.007, end=.007, size=.00, color='black'),
-                  y=list(show=TRUE, start=0, end=24, size=6, width=5, color='grey'),
-                  x=list(show=TRUE, start=0, end=200, size=50, width=5, color="grey"))
-                ) |>
-  colorbar(title="", x=.9, y=0.7) %>%
-  hide_colorbar() |>
-  layout(
-    font=list(color = 'black'),
-    scene=list(
-      xaxis=list(title='Day', color="black", autorange="reversed", tickvals=seq(0,200, 50)),
-      yaxis=list(title='Time of day [h]', color="black", tickvals=seq(0,24, 6)),
-      zaxis=list(title="Intercept", color="black", range=c(-.007, .007), nticks=5),
-    camera=list(
-      margin=list(l=0, r=0, b=0, t=0),
-      eye=list(x=2, y=1.7, z=.6),
-      center=list(x=0, y=0, z=0)
-  ))) |>
-  config(displayModeBar=FALSE)
-
-fig0
-save_image(fig0, "Figure_8_compute_compute_model_2_interactive_plot.pdf")
-```
-
-## Model 3 (KW51 extended_model_additive_effects)
+## Model 2 (KW51 extended_model_additive_effects)
 
 ```{r compute_gam6_plot_part1, dev='svg'}
 dtaiB6 <- readRDS(file="data/mode06_dtaiB6.RDS")
@@ -268,7 +226,7 @@ res1 <- select(ds1, td01, ind_day) |>  mutate(mode=mode[,"te(td01,ind_day)"])
 
 surface1 <- unclass(xtabs(mode ~ td01 + ind_day, data=res1))
 fig0 <- plot_ly(z=~surface1, y=~as.numeric(rownames(surface1)), 
-                x=~as.numeric(colnames(surface1)), cmax=.007, cmin=-.007,
+                x=~as.numeric(colnames(surface1)), cmax=.26, cmin=-.055,
                 type="surface", 
                 contours = list(
                   z=list(show=FALSE, start=-.007, end=.007, size=.00, color = 'black'),
@@ -281,8 +239,8 @@ fig0 <- plot_ly(z=~surface1, y=~as.numeric(rownames(surface1)),
     font=list(color = 'black'),
     scene=list(
       xaxis=list(title='Day', color="black"),
-      yaxis=list(title='Time of day [h]', color="black", tickvals=seq(0,24, 6), autorange="reversed"),
-      zaxis=list(title="Intercept", color="black", range=c(-.007, .007), nticks=5),
+      yaxis=list(title="Time of day [h]", color="black", tickvals=seq(6, 24, 6), autorange="reversed"),
+      zaxis=list(title="Intercept", color="black", range=c(-.02, .05), nticks=5),
     camera=list(
       margin=list(l=0, r=0, b=0, t=0),
       eye=list(x=-1.8, y=-1.75, z=.8),
@@ -291,7 +249,7 @@ fig0 <- plot_ly(z=~surface1, y=~as.numeric(rownames(surface1)),
   config(displayModeBar=FALSE)
 
 fig0
-save_image(fig0, "Figure_9a_plot_2d_3D_fig1_mode06.pdf")
+save_image(fig0, "Figure_8a_plot_2d_3D_fig1_mode06.pdf")
 ```
 
 ```{r compute_gam6_plot_part2}
@@ -300,7 +258,7 @@ p2 <- draw(gam6d, select="s(temp)", rug=FALSE) +
   labs(x=bquote(Temperature~italic(z[1](t))~"[°"*C*"]"), 
        y=bquote(italic(f[1](z[1](t)))), 
        title="Temperature effect") +
-  scale_y_continuous(limits=c(-.015,.03)) +
+  scale_y_continuous(limits=c(-.02, .05)) +
         theme(legend.title=element_blank(), legend.position="none",
           axis.text=element_text(size=12),
           axis.title=element_text(size=12), 
@@ -311,7 +269,7 @@ p3 <- draw(gam6d, select="s(humid)", rug=FALSE) +
     labs(x=bquote(Relative~humidity~z[2](t)~"[%]"), 
          y=bquote(italic(f[2](z[2](t)))),        
          title="Relative humidity effect") +
-         scale_y_continuous(limits=c(-.015,.03)) +
+         scale_y_continuous(limits=c(-.02, .05)) +
         theme(legend.title=element_blank(), legend.position="none",
           axis.text=element_text(size=12),
           axis.title=element_text(size=12), 
@@ -323,13 +281,13 @@ p2$labels$caption <- rep("", length(p2$labels$caption))
 p3$labels$caption <- rep("", length(p3$labels$caption))
 ```
 
-```{r Figure_9b_plot_gam6, fig.width=8, fig.height=4}
+```{r Figure_8b_plot_gam6-1, fig.width=8, fig.height=4}
 p2 + p3 + plot_layout(ncol=2)
 ```
 
 ## Model 4 (KW51 extended_model_interactions)
 
-```{r Figure_10a_compute_7d_3D_fig2, dev='svg'}
+```{r Figure_9a_compute_7d_3D_fig2, dev='svg'}
 gam7d <- readRDS("data/mode06_gam7d.RDS")
 dtaiB7 <- readRDS("data/mode06_dtaiB7.RDS")
 
@@ -341,7 +299,8 @@ res2 <- select(ds2, td01, ind_day) |>  mutate(mode=mode[,"te(td01,ind_day)"])
 
 surface2 <- unclass(xtabs(mode ~ td01 + ind_day, data=res2))
 
-fig2 <- plot_ly(z=~surface2, y=~as.numeric(rownames(surface2)), 
+fig2 <- plot_ly(z=~surface2, 
+                y=~as.numeric(rownames(surface2)), 
                 x=~as.numeric(colnames(surface2)), type="surface", 
                 cmax=.26, cmin=-.055,
                 contours = list(
@@ -365,10 +324,10 @@ fig2 <- plot_ly(z=~surface2, y=~as.numeric(rownames(surface2)),
   config(displayModeBar=FALSE)
 fig2
 
-save_image(fig2, "Figure_10a_compute_7d_3D_fig2.pdf")
+save_image(fig2, "Figure_9a_compute_7d_3D_fig2.pdf")
 ```
 
-```{r Figure_10b_compute_7d_3D_fig1, dev='svg'}
+```{r Figure_9b_compute_7d_3D_fig1, dev='svg'}
 ds1 <- data_slice(gam7d$gam, temp=evenly(temp, n=100),
                  humid=evenly(humid, n=100))
 
@@ -398,7 +357,7 @@ fig1 <- plot_ly(z=~surface1, y=~as.numeric(rownames(surface1)),
   config(displayModeBar=FALSE) 
 
 fig1
-save_image(fig1, "Figure_10b_compute_7d_3D_fig1.pdf")
+save_image(fig1, "Figure_9b_compute_7d_3D_fig1.pdf")
 ```
 
 ```{r}
@@ -474,8 +433,6 @@ dtai3 <- dta |>
 ```
 
 ```{r General_setup}
-r    <- 0.3   # smoothing parameter of the control chart
-L0   <- 370.4 # In-control ARL
 DFa  <- rbind(dtai, dtai2)  # data without retrofitting
 DFb  <- rbind(dtai, dtai3)  # data with retrofitting
 yaoetal <- function(data, phi, s2, sig, nu) {
@@ -486,18 +443,20 @@ yaoetal <- function(data, phi, s2, sig, nu) {
 }
 ```
 
-#### Calculate MEWMA and T2 statistics
+## Calculate MEWMA and T2 statistics
 
-### MEWMA plot interactions lambda = 0.3
+### MEWMA plot interactions lambda = 0.3 with interactions model
 
 ### MEWMA setup monitoring including retrofitting period with interactions model
 
 ```{r MEWMA_setup_interactions_lambda_03}
+r    <- 0.3   # smoothing parameter of the control chart
+L0   <- 370.4 # In-control ARL
 fpcaRes <- readRDS("data/mode06_gam7_fpcaRes.RDS")
 gam7d  <- readRDS("data/mode06_gam7d.RDS")
 p      <- fpcaRes$npc
 h4     <- spc::mewma.crit(r, L0, p, hs=0, r=20)
-nu     <- VarCorr(gam2d$lme)[c("ef01", "ef02", "ef03", "ef04"),][,"Variance"] |>
+nu     <- lme4::VarCorr(gam7d$lme)[c("ef01", "ef02", "ef03", "ef04"),][,"Variance"] |>
   t() |>
   as.data.frame() |>
   as.numeric()
@@ -541,66 +500,15 @@ for(i in x) {
 }
 
 ## create data frame for plotting
-res1 <- data.frame(day=1:472, T2=T2a) |>
+resl03_interactions <- data.frame(day=1:472, T2=T2a) |>
   mutate(date=seq.POSIXt(first(DFa$date), last(DFa$date), by="day"))
 ```
 
-```{r MEWMA_chart_without_retrofitting_interactions_lambda_03}
-## omit days with 24 NA's per day
-NAgeq24 <- DFa |>
-  select(mode, temp, humid, ind_day, ind_hour) |>
-  group_by(ind_day) |>
-  summarise(across(-c(ind_hour), ~sum(is.na(.))>=23)) |>
-  filter(mode==TRUE | temp==TRUE | humid==TRUE)
-
-DF <- DFb |> filter(!ind_day %in% NAgeq24$ind_day) 
-
-x <- unique(DF$ind_day)[-1]
-y <- 226:360
-z <- x[! x %in% y]
-
-## Initialize Hotelling setup
-Z   <- rep(0, p)
-T2b <- rep(NA, 472)
-mu0 <- rep(0, p)
-
-## Fill Hotelling chart
-for(i in z) {
-  df    <- filter(DF, ind_day==i)
-  pred  <- predict(gam7d$gam, newdata=select(df, mode, td01, temp, humid, ind_day))
-  error <- matrix(pred-df$mode, ncol=24)
-  error <- matrix(error, ncol=24)
-  X <- yaoetal(error, phi, s2, sig, nu)
-  if ( i==min(x) ) {
-    Z <- c(r*X + (1-r)*mu0)
-  } else {
-    Z <- c(r*X) + (1-r)*Z
-  }
-  T2b[i] <- t(Z-mu0) %*% invSig %*% (Z-mu0)
-}
-
-## create data frame for plotting
-res2 <- data.frame(day=1:472, T2=T2b) |>
-  mutate(date=seq.POSIXt(first(DFb$date), last(DFb$date), by="day"))
-```
-
-```{r combine_data_and_rects_for_retrofitting_phase_interactions_lambda_03}
-## combine data with and without retrofitting for plotting
-res3 <- bind_rows(res1, res2, .id="CHART")
-## rectangle retrofitting phase for plotting
-rects <- data.frame(
-  xstart=as.POSIXct("2019-05-15", tz="UTC"),
-  xend  =as.POSIXct("2019-09-27", tz="UTC"),
-  col="grey45", ymin=.1, ymax=8000) |>
-  `colnames<-`(c("xstart", "xend", "col", "ymin", "ymax") )
-```
-
 ```{r}
-filter(res3, T2 > h4, CHART==1) |> head(n=10)
-filter(res3, T2 > h4, CHART==2) |> head(n=10)
+filter(resl03_interactions, T2 > h403) |> head(n=10)
 ```
 
-### MEWMA plot interactions lambda = 1
+### MEWMA plot interactions lambda = 1 with interactions model
 
 ### MEWMA setup monitoring including retrofitting period with interactions model
 
@@ -610,7 +518,7 @@ gam7d  <- readRDS("data/mode06_gam7d.RDS")
 p      <- fpcaRes$npc
 r      <- 1
 h4     <- spc::mewma.crit(r, L0, p, hs=0, r=20)
-nu     <-  VarCorr(gam2d$lme)[c("ef01", "ef02", "ef03", "ef04"),][,"Variance"] |>
+nu     <- lme4:: VarCorr(gam7d$lme)[c("ef01", "ef02", "ef03", "ef04"),][,"Variance"] |>
   t() |>
   as.data.frame() |>
   as.numeric()
@@ -654,82 +562,213 @@ for(i in x) {
 }
 
 ## create data frame for plotting
-res1 <- data.frame(day=1:472, T2=T2a) |>
+resl1_interactions <- data.frame(day=1:472, T2=T2a) |>
   mutate(date=seq.POSIXt(first(DFa$date), last(DFa$date), by="day"))
 ```
 
-```{r MEWMA_chart_without_retrofitting_interactions_lambda_1}
-## omit days with 24 NA's per day
-NAgeq24 <- DFa |>
-  select(mode, temp, humid, ind_day, ind_hour) |>
+```{r}
+filter(resl1_interactions, T2 > h41) |> head(n=10)
+```
+
+### MEWMA plot basic model lambda = 0.3
+
+### MEWMA setup monitoring including retrofitting period with basic model
+
+```{r load_data_for_monitoring_basic_model}
+dta   <- readRDS("data/Dataset_bridge_KW51.RDS")
+nc    <- 8
+var   <- c("temp", "mode", "ind_day", "ind_hour", "td01")
+M     <- (sprintf("Mode_%02d", 1:14))
+i     <- 06  # Mode number
+N     <- 200 # End of Phase I
+sigma <- 3   # Sigma limit
+hseq <- seq(.5, 23.5, 1)
+```
+
+```{r basic_model_data}
+## Phase I data (first 200 observations)
+dtai <- dta |> 
+  dplyr::select(tBD31A, M[i], ind_day, ind_hour, date) |> 
+  rename(temp=tBD31A, mode=M[i]) |>
   group_by(ind_day) |>
-  summarise(across(-c(ind_hour), ~sum(is.na(.))>=23)) |>
-  filter(mode==TRUE | temp==TRUE | humid==TRUE)
+  filter(ind_day<=N) |>
+  mutate(td01 = hseq) |>
+  ungroup()
 
-DF <- DFb |> filter(!ind_day %in% NAgeq24$ind_day) 
+## determine limits based on mean+-sigma*sd
+LIMITS <- dtai |>
+  filter(ind_day<=N) |>
+  dplyr::select(mode) |> 
+  summarise(mmean = mean(mode, na.rm=TRUE),
+            msd   = sd(mode, na.rm=TRUE),
+            upperLimit=mmean+sigma*msd,
+            lowerLimit=mmean-sigma*msd) 
 
-x <- unique(DF$ind_day)[-1]
+## days higher than sigma limit
+filter(dtai, mode>LIMITS$upperLimit) |> 
+  dplyr::select(ind_day) |> 
+  unique()
+
+## replace NA for days higher than sigma limit
+dtai <- dtai |> 
+  mutate(mode=replace(mode, mode>LIMITS$upperLimit & ind_day%in%c(1:N), NA)) |>
+  mutate(mode=replace(mode, mode<LIMITS$lowerLimit & ind_day%in%c(1:N), NA))
+
+## data for Phase II
+dtai2 <- dta |> 
+  dplyr::select(tBD31A, M[i], ind_day, ind_hour, date) |> 
+  rename(temp=tBD31A, mode=M[i]) |>
+  group_by(ind_day) |>
+  filter(ind_day>N) |>
+  mutate(td01 = hseq) |>
+  ungroup()
+
+x <- 201:472
 y <- 226:360
 z <- x[! x %in% y]
 
+## data for 
+dtai3 <- dta |>
+  dplyr::select(tBD31A, M[i], ind_day, ind_hour, date) |> 
+  rename(temp=tBD31A, mode=M[i]) |>
+  group_by(ind_day) |>
+  filter(ind_day%in%z) |>
+   mutate(td01 = hseq) |>
+  ungroup()
+```
+
+```{r MEWMA_setup_basic_lambda_03}
+fpcaRes <- readRDS("data/mode06_gam2_fpcaRes.RDS")
+gam2d  <- readRDS("data/mode06_gam2d.RDS")
+p      <- fpcaRes$npc
+r      <- 0.3   # smoothing parameter of the control chart
+L0     <- 370.4 # In-control ARL
+h4     <- spc::mewma.crit(r, L0, p, hs=0, r=20)
+nu     <- lme4::VarCorr(gam2d$lme)[c("ef01", "ef02", "ef03", "ef04"),][,"Variance"] |>
+  t() |>
+  as.data.frame() |>
+  as.numeric()
+s2     <- diag(nu)
+invSig <- solve(s2) / (r/(2-r))
+sig    <- gam2d$gam$sig2
+phi    <- fpcaRes$efunctions
+h403   <- h4
+```
+
+```{r MEWMA_chart_with_retrofitting_basic_lambda_03}
+## omit days with 24 NA's per day
+NAgeq24 <- DFa |>
+  dplyr::select(mode, temp, ind_day, ind_hour) |>
+  group_by(ind_day) |>
+  summarise(across(-c(ind_hour), ~sum(is.na(.))>=23)) |>
+  filter(mode==TRUE | temp==TRUE) 
+
+DF <- DFa |> filter(!ind_day %in% NAgeq24$ind_day) 
+
+x   <- unique(DF$ind_day)
+
 ## Initialize Hotelling setup
 Z   <- rep(0, p)
-T2b <- rep(NA, 472)
+T2a <- rep(NA, 472)
+mu0 <- rep(0, p)
+XX <- matrix(NA, nrow=472, ncol=p)
+## Fill Hotelling chart
+for(i in x) {
+  df    <- filter(DF, ind_day==i)
+  pred  <- predict(gam2d$gam, newdata=dplyr::select(df, mode, td01, temp))
+  error <- matrix(pred-df$mode, ncol=24)
+  error <- matrix(error, ncol=24)
+  X <- yaoetal(error, phi, s2, sig, nu)
+  XX[i,] <- X
+  if ( i==min(x) ) {
+    Z <- r*X + (1-r)*mu0
+  } else {
+    Z <- r*X + (1-r)*Z
+  }
+  T2a[i] <- t(Z-mu0) %*% invSig %*% (Z-mu0)
+}
+
+## create data frame for plotting
+resl03_basic <- data.frame(day=1:472, T2=T2a) |>
+  mutate(date=seq.POSIXt(first(DFa$date), last(DFa$date), by="day"))
+```
+
+```{r}
+filter(resl03_basic, T2 > h403) |> head(n=10)
+```
+
+### MEWMA plot interactions lambda = 1
+
+### MEWMA setup monitoring including retrofitting period with basic model
+
+```{r MEWMA_setup_basic_lambda_1}
+fpcaRes <- readRDS("data/mode06_gam2_fpcaRes.RDS")
+gam2d  <- readRDS("data/mode06_gam2d.RDS")
+p      <- fpcaRes$npc
+r      <- 1
+h4     <- spc::mewma.crit(r, L0, p, hs=0, r=20)
+nu     <- lme4::VarCorr(gam2d$lme)[c("ef01", "ef02", "ef03", "ef04"),][,"Variance"] |>
+  t() |>
+  as.data.frame() |>
+  as.numeric()
+s2     <- diag(nu)
+invSig <- solve(s2) / (r/(2-r))
+sig    <- gam2d$gam$sig2
+phi    <- fpcaRes$efunctions
+h41    <- h4
+```
+
+```{r MEWMA_chart_with_retrofitting_basic_lambda_1}
+## omit days with 24 NA's per day
+NAgeq24 <- DFa |>
+  select(mode, temp, ind_day, ind_hour) |>
+  group_by(ind_day) |>
+  summarise(across(-c(ind_hour), ~sum(is.na(.))>=23)) |>
+  filter(mode==TRUE | temp==TRUE) 
+
+DF <- DFa |> filter(!ind_day %in% NAgeq24$ind_day) 
+
+x   <- unique(DF$ind_day)
+
+## Initialize Hotelling setup
+Z   <- rep(0, p)
+T2a <- rep(NA, length(x))
 mu0 <- rep(0, p)
 
 ## Fill Hotelling chart
-for(i in z) {
+for(i in x) {
   df    <- filter(DF, ind_day==i)
-  pred  <- predict(gam7d$gam, newdata=select(df, mode, td01, temp, humid, ind_day))
+  pred  <- predict(gam2d$gam, newdata=select(df, mode, td01, temp))
   error <- matrix(pred-df$mode, ncol=24)
   error <- matrix(error, ncol=24)
   X <- yaoetal(error, phi, s2, sig, nu)
   if ( i==min(x) ) {
-    Z <- c(r*X + (1-r)*mu0)
+    Z <- r*X + (1-r)*mu0
   } else {
-    Z <- c(r*X) + (1-r)*Z
+    Z <- r*X + (1-r)*Z
   }
-  T2b[i] <- t(Z-mu0) %*% invSig %*% (Z-mu0)
+  T2a[i] <- t(Z-mu0) %*% invSig %*% (Z-mu0)
 }
 
 ## create data frame for plotting
-res2 <- data.frame(day=1:472, T2=T2b) |>
-  mutate(date=seq.POSIXt(first(DFb$date), last(DFb$date), by="day"))
-```
-
-```{r combine_data_and_rects_for_retrofitting_phase_interactions_lambda_1}
-## combine data with and without retrofitting for plotting
-res4 <- bind_rows(res1, res2, .id="CHART")
-## rectangle retrofitting phase for plotting
-rects4 <- data.frame(
-  xstart=as.POSIXct("2019-05-15", tz="UTC"),
-  xend  =as.POSIXct("2019-09-27", tz="UTC"),
-  col="grey45", ymin=.1, ymax=1200) |>
-  `colnames<-`(c("xstart", "xend", "col", "ymin", "ymax") )
+resl1_basic <- data.frame(day=1:472, T2=T2a) |>
+  mutate(date=seq.POSIXt(first(DFa$date), last(DFa$date), by="day"))
 ```
 
 ```{r}
-filter(res4, T2 > h41, CHART==1) |> head(n=10)
-filter(res4, T2 > h41, CHART==2) |> head(n=10)
+filter(resl1_basic, T2 > h41) |> head(n=10)
 ```
-#### MEWMA plot
 
-```{r Figure_11_MEWMA_control_charts, fig.width=12, fig.height=7, message=FALSE, warning=FALSE}
-## combined plots
+#### MEWMA plot combined
+
+```{r Figure_10_MEWMA_control_charts, fig.width=12, fig.height=7, message=FALSE, warning=FALSE}
 lims <- data.frame(
-  yintercept=c(h41, h41, h403 , h403),
-  CHART_pos=c( 
-                             "MEWMA~chart~(lambda==1)~with~retrofitting~phase",
-                             "MEWMA~chart~(lambda==1)~without~retrofitting~phase", 
-                             "MEWMA~chart~(lambda==0.3)~with~retrofitting~phase", 
-                             "MEWMA~chart~(lambda==0.3)~without~retrofitting~phase" 
-))
-
-lims <- mutate(lims, CHART_pos=factor(CHART_pos, levels=c( 
-                             "MEWMA~chart~(lambda==1)~with~retrofitting~phase",
-                             "MEWMA~chart~(lambda==1)~without~retrofitting~phase", 
-                             "MEWMA~chart~(lambda==0.3)~with~retrofitting~phase", 
-                             "MEWMA~chart~(lambda==0.3)~without~retrofitting~phase" 
+  yintercept=c(h41, h41, h403, h403),
+  CHART=factor(c( 
+    "MEWMA~chart~(lambda==1)~Basic~model",
+    "MEWMA~chart~(lambda==1)~Interactions~model",
+    "MEWMA~chart~(lambda==0.3)~Basic~model",
+    "MEWMA~chart~(lambda==0.3)~Interactions~model"
 )))
 
 rects4 <- data.frame(
@@ -738,40 +777,40 @@ rects4 <- data.frame(
   col="grey45", ymin=.1, ymax=8000) |>
   `colnames<-`(c("xstart", "xend", "col", "ymin", "ymax") )
 
-df <- bind_rows(
-  filter(res3, date>="2019-01-01") |>
+df <- 
+  bind_rows(
+  resl1_basic, 
+  resl1_interactions,
+  resl03_basic, 
+  resl03_interactions,
+  .id="CHART") |>
+  filter(date>="2018-11-23") |>
   mutate(CHART=factor(CHART, labels=c(
-    "MEWMA~chart~(lambda==0.3)~with~retrofitting~phase",  
-    "MEWMA~chart~(lambda==0.3)~without~retrofitting~phase"
-    ))),
-  filter(res4, date>="2019-01-01") |>
-  mutate(CHART=factor(CHART, labels=c(
-    "MEWMA~chart~(lambda==1)~with~retrofitting~phase",  
-    "MEWMA~chart~(lambda==1)~without~retrofitting~phase")))
-  )|>
-  mutate(CHART_pos = factor(CHART, levels=c( 
-                             "MEWMA~chart~(lambda==1)~with~retrofitting~phase",
-                             "MEWMA~chart~(lambda==1)~without~retrofitting~phase", 
-                             "MEWMA~chart~(lambda==0.3)~with~retrofitting~phase", 
-                             "MEWMA~chart~(lambda==0.3)~without~retrofitting~phase")))
+    "MEWMA~chart~(lambda==1)~Basic~model",
+    "MEWMA~chart~(lambda==1)~Interactions~model",
+    "MEWMA~chart~(lambda==0.3)~Basic~model",
+    "MEWMA~chart~(lambda==0.3)~Interactions~model"
+  ))) |>
+  mutate(ALARM=ifelse((T2 > h41) & (CHART%in%c("MEWMA~chart~(lambda==1)~Basic~model")), 1, 0)) |>
+  mutate(ALARM=ifelse((T2 > h41) & (CHART%in%c("MEWMA~chart~(lambda==1)~Interactions~model")), 1, ALARM)) |>
+  mutate(ALARM=ifelse((T2 > h403) & (CHART%in%c("MEWMA~chart~(lambda==0.3)~Basic~model")), 1, ALARM)) |>
+  mutate(ALARM=ifelse((T2 > h403) & (CHART%in%c("MEWMA~chart~(lambda==0.3)~Interactions~model")), 1, ALARM)) |>
+  mutate(ALARM=factor(ALARM, levels=c(1,0), labels=c("Signal", "No signal")))
+
+df |> filter(ALARM=="Signal", CHART%in%c("MEWMA~chart~(lambda==1)~Basic~model")) |> head(n=5) 
+df |> filter(ALARM=="Signal", CHART%in%c("MEWMA~chart~(lambda==1)~Interactions~model")) |> head(n=5) 
+df |> filter(ALARM=="Signal", CHART%in%c("MEWMA~chart~(lambda==0.3)~Basic~model")) |> head(n=5) 
+df |> filter(ALARM=="Signal", CHART%in%c("MEWMA~chart~(lambda==0.3)~Interactions~model")) |> head(n=5) 
+
+
 
 df |>
- ggplot(aes(x=date, y=T2, group=CHART_pos)) +
+  ggplot(aes(x=date, y=T2, group=CHART)) +
+    geom_line(linewidth=.2) +
     geom_point(size=.5) +
-    geom_line(linewidth=.3) +
-    geom_point(aes(x = date, y = ifelse(T2 > h403, T2, NA), color='red', group=CHART), size=.8) +
-    geom_point(data=filter(df,
-                           CHART%in%c(
-                             "MEWMA~chart~(lambda==1)~with~retrofitting~phase",
-                             "MEWMA~chart~(lambda==1)~without~retrofitting~phase")),
-               aes(x = date, y = ifelse(T2 > h41, T2, NA), group=CHART), color="red", size=.8) +
-    geom_point(data=filter(df, 
-                           CHART%in%c(
-                             "MEWMA~chart~(lambda==0.3)~with~retrofitting~phase",
-                             "MEWMA~chart~(lambda==0.3)~without~retrofitting~phase")), 
-               aes(x = date, y = ifelse(T2 > h403, T2, NA), group=CHART), color="red", size=.8) +
-    facet_wrap(~CHART_pos, ncol=2, scales="fixed", labeller = label_parsed) +
-    geom_hline(data=lims, aes(yintercept=yintercept, group=CHART_pos), color="orange") +
+    geom_point(data=filter(df, ALARM=="Signal"), size=.5, aes(date, T2, group=CHART, color="red")) +
+    facet_wrap(~CHART, ncol=2, scales="fixed", labeller = label_parsed) +
+    geom_hline(data=lims, aes(yintercept=yintercept, group=CHART), color="orange") +
     geom_rect(data=rects4, aes(xmin=xstart, xmax=xend, ymin=ymin, ymax=ymax),
               alpha=.2, inherit.aes=FALSE) +
     geom_vline(xintercept=as.POSIXct("2019-04-20", tz="UTC"), 
@@ -795,7 +834,40 @@ df |>
     guides(colour=guide_legend(override.aes=list(size=2))) 
 ```
 
+## Summary of the data set
+
 ```{r NA_data_histograms}
+dta   <- readRDS("data/Dataset_bridge_KW51.RDS")
+M     <- (sprintf("Mode_%02d", 1:14))
+i     <- 06  # Mode number
+## Phase I data (first 200 observations)
+dtai <- dta |> 
+  select(tBD31A, rhBD31A, M[i], ind_day, ind_hour, date) |> 
+  rename(temp=tBD31A, humid=rhBD31A, mode=M[i]) |>
+  group_by(ind_day) |>
+  filter(ind_day<=N) |>
+  mutate(td01 = hseq) |>
+  ungroup()
+
+## determine limits based on mean+-sigma*sd
+LIMITS <- dtai |>
+  filter(ind_day<=N) |>
+  select(mode) |> 
+  summarise(mmean = mean(mode, na.rm=TRUE),
+            msd   = sd(mode, na.rm=TRUE),
+            upperLimit=mmean+sigma*msd,
+            lowerLimit=mmean-sigma*msd) 
+
+## days higher than sigma limit
+filter(dtai, mode>LIMITS$upperLimit) |> 
+  select(ind_day) |> 
+  unique()
+
+## replace NA for days higher than sigma limit
+dtai <- dtai |> 
+  mutate(mode=replace(mode, mode>LIMITS$upperLimit & ind_day%in%c(1:N), NA)) |>
+  mutate(mode=replace(mode, mode<LIMITS$lowerLimit & ind_day%in%c(1:N), NA))
+
 ## number of days in the study
 max(unique(dtai$ind_day))
 

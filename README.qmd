@@ -21,7 +21,7 @@ execute:
   warning: true
 cache: false
 
-date: "10/07/2024" 
+date: "02/13/2025" 
 format: gfm
 
 editor: source
@@ -128,7 +128,7 @@ plots initial functions, simulated data run profiles and their mean.
 * Output: 
   - Figure A2 (Model training pipeline results on simulated profiles)
 
-# Simulation study: monitoring scheme run length - computational results
+# Simulation study: monitoring scheme run length - computational results part 1
 The file *Simulations_study_monitoring_scheme_run_length_computational_results.R*
 is an R-script prepared for parallel computing the run-lengths of the MEWMA control charts.
 
@@ -137,8 +137,28 @@ is an R-script prepared for parallel computing the run-lengths of the MEWMA cont
   - gam2d_simulation_runlength.RDS (Basic model for artificial data)
   - repeat the script for different lambda settings (0.1, 0.3, 1)
 * Output: 
-  - Run-length files for different MEWMA smoothing parameters 
+  - Run-length files for different MEWMA smoothing parameters
 
+# Simulation study: monitoring scheme run length - computational results part 2
+The file *SHEWHART_ARL_calculation_daily.R*
+is an R-script prepared for parallel computing the run-lengths of the daily Shewhart control chart based on a fit of a piecewise linear model where hourly data (residuals) are averaged to 24h.
+
+* Input: 
+  - gam2d_simulation_runlength.RDS (Load the exact same data as for the MEWMA 
+  charts from the gam2d_simulation_runlength_XX.RDS files)
+* Output: 
+  - Run-length files for daily Shewhart charts
+  
+# Simulation study: monitoring scheme run length - computational results part 3
+The file *SHEWHART_ARL_calculation_hourly.R*
+is an R-script prepared for parallel computing the run-lengths of the hourly Shewhart control chart based on a fit of a piecewise linear model.
+
+* Input: 
+  - gam2d_simulation_runlength.RDS (Load the exact same data as for the MEWMA 
+  charts from the gam2d_simulation_runlength_XX.RDS files)
+* Output: 
+  - Run-length files for hourly Shewhart charts  
+  
 # Simulations monitoring scheme run length - plots
 The file *Simulations_monitoring_scheme_run_length_plots.qmd* plots ARL profiles for different MEWMA smooting parameters.
 

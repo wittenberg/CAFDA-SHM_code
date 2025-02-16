@@ -1,6 +1,6 @@
 # Covariate-Adjusted Functional Data Analysis for SHM
 
-2024-10-07
+2025-02-13
 
 - [Reproduction details and
   instructions](#reproduction-details-and-instructions)
@@ -14,7 +14,14 @@
 - [Simulation study: model training pipe line - plot
   results](#simulation-study-model-training-pipe-line---plot-results)
 - [Simulation study: monitoring scheme run length - computational
-  results](#simulation-study-monitoring-scheme-run-length---computational-results)
+  results part
+  1](#simulation-study-monitoring-scheme-run-length---computational-results-part-1)
+- [Simulation study: monitoring scheme run length - computational
+  results part
+  2](#simulation-study-monitoring-scheme-run-length---computational-results-part-2)
+- [Simulation study: monitoring scheme run length - computational
+  results part
+  3](#simulation-study-monitoring-scheme-run-length---computational-results-part-3)
 - [Simulations monitoring scheme run length -
   plots](#simulations-monitoring-scheme-run-length---plots)
 - [References](#references)
@@ -132,7 +139,7 @@ plots initial functions, simulated data run profiles and their mean.
 - Output:
   - Figure A2 (Model training pipeline results on simulated profiles)
 
-# Simulation study: monitoring scheme run length - computational results
+# Simulation study: monitoring scheme run length - computational results part 1
 
 The file
 *Simulations_study_monitoring_scheme_run_length_computational_results.R*
@@ -146,6 +153,31 @@ MEWMA control charts.
   - repeat the script for different lambda settings (0.1, 0.3, 1)
 - Output:
   - Run-length files for different MEWMA smoothing parameters
+
+# Simulation study: monitoring scheme run length - computational results part 2
+
+The file *SHEWHART_ARL_calculation_daily.R* is an R-script prepared for
+parallel computing the run-lengths of the daily Shewhart control chart
+based on a fit of a piecewise linear model where hourly data (residuals)
+are averaged to 24h.
+
+- Input:
+  - gam2d_simulation_runlength.RDS (Load the exact same data as for the
+    MEWMA charts from the gam2d_simulation_runlength_XX.RDS files)
+- Output:
+  - Run-length files for daily Shewhart charts
+
+# Simulation study: monitoring scheme run length - computational results part 3
+
+The file *SHEWHART_ARL_calculation_hourly.R* is an R-script prepared for
+parallel computing the run-lengths of the hourly Shewhart control chart
+based on a fit of a piecewise linear model.
+
+- Input:
+  - gam2d_simulation_runlength.RDS (Load the exact same data as for the
+    MEWMA charts from the gam2d_simulation_runlength_XX.RDS files)
+- Output:
+  - Run-length files for hourly Shewhart charts
 
 # Simulations monitoring scheme run length - plots
 
@@ -181,8 +213,8 @@ During, and After Retrofitting.” *Journal of Bridge Engineering* 26 (3):
 <div id="ref-Wittenberg.etal_2024" class="csl-entry">
 
 Wittenberg, Philipp, Lizzie Neumann, Alexander Mendler, and Jan
-Gertheiss. 2024. “A Functional Data Approach for Structural Health
-Monitoring.” <https://arxiv.org/abs/2408.02106>.
+Gertheiss. 2024. “Covariate-Adjusted Functional Data Analysis for
+Structural Health Monitoring.” <https://arxiv.org/abs/2408.02106>.
 
 </div>
 

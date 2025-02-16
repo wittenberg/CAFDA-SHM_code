@@ -1,4 +1,4 @@
-## Variance components## load libraries
+## load libraries
 suppressPackageStartupMessages({
   library(spc)
   library(mgcv)
@@ -51,12 +51,12 @@ SHEWHART_arl_hourly <- function(h, hseq, delta, efi, meanU, fb1, sig, modlm) {
   rl
 }
 
-n  <- 1e2    ## Number of replications
+n  <- 1e4    ## Number of replications
 L0 <- 100*24 ## In-control ARL (rescaled to hours)
 p  <- 1      ## Number of parameters
 h <- spc::mewma.crit(l=1, L0, p, hs=0, r=20) ## Shewhart control limit
 RUNS <- 1:100
-nc <- 8#120
+nc <- 120
 ## adapt this path to your local setup to load the estimated models and eigenfunctions
 DIR <- "data/simulations/"
 sapply(RUNS, function(ii) {

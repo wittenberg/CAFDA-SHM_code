@@ -23,7 +23,7 @@ execute:
   warning: true
 cache: false
 
-date: "10/07/2024" 
+date: "02/13/2025" 
 format:
   html:
     embed-resources: false
@@ -187,7 +187,6 @@ p1 <- bind_rows(df1, df2, df3, df4, df5, .id="LAMBDA") |>
     scale_colour_manual(values = mcb[c(2,3,5,1,4)], labels=LABS) +
     scale_fill_manual(values = mcb[c(2,3,5,1,4)], labels=LABS) +
     theme(legend.position="none", legend.title=element_blank())
-p1
 ```
 
 ```{r MEWMA_simulation_plots_standardized_shift, fig.width=8.5, fig.height=3}
