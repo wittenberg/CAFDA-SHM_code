@@ -50,6 +50,7 @@ rsconnect/
 
 # data files
 data/*
+data/simulations/*
 
 # exception to the rule
 !data/.gitkeep 
